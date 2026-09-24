@@ -223,7 +223,8 @@ function checklistFor(status: PostStatus) {
 }
 
 function tagsFor(setIds: string[]) {
-  return setIds.flatMap((id) => HASHTAG_SETS.find((s) => s.id === id)?.tags.slice(0, 4) ?? [])
+  // Instagram erlaubt inzwischen nur noch wenige Hashtags – max. 5 pro Post
+  return setIds.flatMap((id) => HASHTAG_SETS.find((s) => s.id === id)?.tags.slice(0, 3) ?? []).slice(0, 5)
 }
 
 function metricsFor(rand: () => number, seed: PostSeed) {

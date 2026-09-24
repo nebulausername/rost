@@ -24,6 +24,10 @@
   --accent-hover: #ad5f22;
   --accent-soft: #f7e8da;
   --accent-text: #93501d;
+  /* Flächen mit Text darauf: Kupfer-700 für AA-Kontrast (5,1:1 mit Weiß) */
+  --accent-solid: #a55a22;
+  --accent-solid-hover: #8f4c1b;
+  --on-accent: #ffffff;
   --crema: #e9d8c4;
   --roast: #5b3a29;
   --success: #4f7049;
@@ -66,6 +70,9 @@
   --accent-hover: #e6955c;
   --accent-soft: #3a2618;
   --accent-text: #eba271;
+  --accent-solid: #d98a4b;
+  --accent-solid-hover: #e6955c;
+  --on-accent: #1c130e;
   --crema: #4a3a2d;
   --roast: #c9a78e;
   --success: #86a980;
@@ -109,6 +116,9 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-text: var(--accent-text);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+  --color-on-accent: var(--on-accent);
   --color-crema: var(--crema);
   --color-roast: var(--roast);
   --color-success: var(--success);

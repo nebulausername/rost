@@ -379,7 +379,7 @@ flowchart LR
     B2 --> C2
     B3 --> C1
     B4 --> C2
-    C1 -- "QR-Code an der Theke" --> D2
+    C1 -->|"QR-Code an der Theke"| D2
     C1 --> D1
     C2 --> D1
     C3 --> D1
@@ -387,8 +387,8 @@ flowchart LR
     D2 --> E3
     C1 --> E1
     D1 --> E2
-    E2 -. "neue Reichweite" .-> A1
-    E3 -. "neue Kund:innen" .-> C2
+    E2 -.->|"neue Reichweite"| A1
+    E3 -.->|"neue Kund:innen"| C2
 ```
 
 ### 5.3 Die drei wichtigsten Brücken
@@ -519,7 +519,7 @@ Jeder Kaffee bekommt eine eigene Pass-Seite, erreichbar per QR-Code auf der Tüt
 - Express-Checkout (PayPal, Apple Pay, Google Pay, Klarna – je nach System) und Gast-Checkout.
 - Bundles: „Probierset 3 × 250 g“, „Espresso-Starter mit Tamper-Tuch“, „Weimar-Souvenir-Box“.
 - Nachkauf-Erinnerung per E-Mail, abhängig von Tütengröße (250 g → nach ca. 2–3 Wochen, 1 kg → nach ca. 6–8 Wochen [Annahme]).
-- Bewertungen nach dem Kauf automatisch anfragen (mit Hinweis auf Echtheit/Verifizierung gemäß Preisangaben- und UWG-Vorgaben).
+- Bewertungen nach dem Kauf automatisch anfragen – inklusive Hinweis, ob und wie die Echtheit geprüft wird (Informationspflicht nach § 5b Abs. 3 UWG).
 
 ### 6.5 SEO
 
@@ -541,7 +541,7 @@ Jeder Kaffee bekommt eine eigene Pass-Seite, erreichbar per QR-Code auf der Tüt
 - [ ] NAP (Name, Adresse, Telefon) auf Website, Google, Apple Maps, Bing Places, Facebook, Coffee-Guides **identisch**.
 - [ ] Strukturierte Daten: `CafeOrCoffeeShop` je Standort, `Product`/`Offer` im Shop, `Event` für Workshops, `BreadcrumbList`, `Organization`.
 - [ ] Wöchentliche Google-Posts je Standort (im Studio als Kanal „Google Unternehmensprofil“ geplant).
-- [ ] Bewertungsstrategie (siehe Playbook) – Antwort auf jede Bewertung binnen 48 h.
+- [ ] Bewertungsstrategie (siehe Playbook, Kapitel 13.5) – Antwort auf jede Bewertung binnen 48 h.
 - [ ] Lokale Backlinks: Weimar-Tourismus, Hotels, Uni-Seiten, Kulturveranstalter, Presse, Coffee-Guides.
 
 #### Content-Hub „Brüh-Wissen“
@@ -637,12 +637,12 @@ Das Studio ist euer **Marketing-Betriebssystem**: Ein Ort für Ideen, Planung, F
 flowchart LR
     I["Idee<br/>(Backlog, Voting)"] --> E["Entwurf<br/>(Caption, Medien, Säule)"]
     E --> R{"Review<br/>durch Admin"}
-    R -- "Änderung nötig" --> E
-    R -- "OK" --> F["Freigegeben"]
+    R -->|"Änderung nötig"| E
+    R -->|"OK"| F["Freigegeben"]
     F --> G["Geplant<br/>(Datum, Uhrzeit, Kanal)"]
     G --> V["Veröffentlicht"]
     V --> A["Auswertung nach 7 Tagen<br/>(Analytics)"]
-    A -. "Learnings" .-> I
+    A -.->|"Learnings"| I
 ```
 
 **Regeln [Vorschlag]:** Standard-Posts brauchen **1 Freigabe** (Collin oder Vincent). Werbeanzeigen, Gewinnspiele, Kooperationen und alles mit Preisen/Rabatten brauchen **beide**. Stories und spontane Café-Momente sind **freigabefrei**, solange die Do's & Don'ts aus der Bibliothek eingehalten werden. Freigaben älter als 48 h erscheinen im Cockpit rot.
@@ -656,7 +656,7 @@ flowchart LR
 | **3 · API-Publishing** | Apr – Jun 2027 | Meta Graph API (Instagram/Facebook), TikTok, Google Business Profile API; geplantes Veröffentlichen via Edge Functions; Metriken automatisch importieren | Kein Copy-Paste mehr, echte Zahlen im Cockpit |
 | **4 · Automatisierung und KI-Assistent** | Jul – Sep 2027 | Caption-Vorschläge in Markenstimme, Hashtag-Empfehlung, Wochenreport per Mail, Anomalie-Hinweise („Budget-Pacing 30 % über Plan“) | Zeitersparnis, bessere Entscheidungen |
 
-**Datenmodell Phase 2 (Skizze):** `posts`, `post_channels`, `campaigns`, `campaign_metrics_daily`, `budgets`, `ideas`, `idea_votes`, `key_dates`, `channels`, `team_members`, `approvals`, `assets`, `library_items`, `social_metrics_daily`. Row Level Security je Rolle.
+**Datenmodell Phase 2:** liegt als fertiges SQL-Schema in [`supabase/migrations/`](../supabase/migrations/) – `profiles` (Rollen owner/editor/viewer), `posts` + `post_activity` (Freigabe-Protokoll), `campaigns` + `campaign_daily_stats`, `budget_plan`, `ideas` + `idea_votes`, `key_dates`, `hashtag_sets`, `caption_templates`, `channel_accounts` + `follower_snapshots`. Row Level Security je Rolle: Team liest, Editor:innen schreiben.
 
 ---
 
@@ -710,7 +710,7 @@ In Q4 verschiebt sich der Mix temporär: `shop` 20 %, `events` 15 % (Gutscheine)
 |---|---|---|---|
 | Meta Ads (Instagram/Facebook) | 180 € | 400 € | 850 € |
 | Google Search | 80 € | 150 € | 300 € |
-| Google Performance Max (Shop) | – | 100 € | 350 € |
+| Google Shopping bzw. Performance Max (Shop) | – | 100 € (Standard-Shopping) | 350 € (PMax) |
 | TikTok Ads | – | – | 200 € |
 | Pinterest Ads | – | – | 100 € |
 | Influencer/Kooperationen | Produkt-Tausch | 100 € | 150 € |
@@ -733,7 +733,7 @@ flowchart TD
     T["TOFU · Reichweite<br/>Reels, Lokal-Ads, TikTok"] --> M["MOFU · Erwägung<br/>Brüh-Wissen, Workshops, Newsletter-Lead"]
     M --> B["BOFU · Abschluss<br/>Retargeting, Search, PMax, Abo"]
     B --> R["Retention · Wiederkauf<br/>Newsletter, Abo, Stammgäste"]
-    R -. "Empfehlungen und UGC" .-> T
+    R -.->|"Empfehlungen und UGC"| T
 ```
 
 ---
@@ -882,7 +882,7 @@ gantt
 | Rhythmus | Wann | Dauer | Wer | Inhalt | Ergebnis |
 |---|---|---|---|---|---|
 | **Täglich** | morgens | 2 Min. | wer Dienst hat | Cockpit: offene Freigaben, heutige Posts, Kommentare | Nichts bleibt liegen |
-| **Wöchentlich** | Montag 9:00 | 15–30 Min. | Collin, Vincent (+ Freelancer) | Wochen-Report (Vorlage im Playbook), Kalender der Woche, Budget-Pacing | 3 Entscheidungen, Wochenplan steht |
+| **Wöchentlich** | Montag 9:00 | 15–30 Min. | Collin, Vincent (+ Freelancer) | Wochen-Report (Vorlage im Playbook, Kapitel 15), Kalender der Woche, Budget-Pacing | 3 Entscheidungen, Wochenplan steht |
 | **Monatlich** | 1. Montag im Monat | 60 Min. | Collin, Vincent | Monats-Report, Top-/Flop-Posts, Säulen-Performance, Plan vs. Ist Budget | Budget-Anpassung, 1–2 Tests für nächsten Monat |
 | **Quartalsweise** | erste Woche im Quartal | 2–3 Std. | beide + Team | Zielerreichung SMART-Ziele, Roadmap-Check, Personas prüfen | Roadmap-Update, Prioritäten |
 
@@ -929,7 +929,7 @@ R = Responsible (macht) · A = Accountable (entscheidet) · C = Consulted (wird 
 | Freelancer:in | – | 8–10 Std. |
 | **Summe** | **10–12 Std.** | **15–17 Std., davon nur 5 Std. Brüder** |
 
-**Wochenrhythmus:** Montag Planung (30 Min.) · Mittwoch Produktionsblock in der Rösterei (2 Std., Röstvorgang filmen) · Donnerstag Freigaben (15 Min.) · Freitag Einplanen + Community (45 Min.) · Wochenende Stories live aus den Cafés. Details im Playbook, Kapitel 13.
+**Wochenrhythmus:** Montag Planung (30 Min.) · Mittwoch Produktionsblock in der Rösterei (2 Std., Röstvorgang filmen) · Donnerstag Freigaben (15 Min.) · Freitag Einplanen + Community (45 Min.) · Wochenende Stories live aus den Cafés. Details im Playbook, Kapitel 16.
 
 ---
 
@@ -963,7 +963,7 @@ Alle Beträge **[Vorschlag]**, netto, als Planungsrahmen. Angebote einholen, bev
 | **Summe laufend/Monat** | **ca. 410 €** | **ca. 2.020 €** | **ca. 4.130 €** |
 | **Summe laufend/Jahr** | **ca. 4.900 €** | **ca. 24.200 €** | **ca. 49.600 €** |
 
-**Empfehlung:** Einstieg mit **S + Tracking + Fotoshooting + POS** im Oktober; **M ab November**, wenn Tracking sauber läuft. Werbebudget saisonal verteilen (12-Monats-Kalender im Playbook).
+**Empfehlung:** Einstieg mit **S + Tracking + Fotoshooting + POS** im Oktober; **M ab November**, wenn Tracking sauber läuft. Werbebudget saisonal verteilen (12-Monats-Kalender im Playbook, Kapitel 10.2).
 
 ---
 
@@ -978,7 +978,7 @@ Alle Beträge **[Vorschlag]**, netto, als Planungsrahmen. Angebote einholen, bev
 | Rohkaffeepreis-Steigerung drückt Marge | hoch | hoch | Preiskommunikation transparent (Bohnen-Pass), Abo-Preisbindung zeitlich begrenzen, Mix-Kalkulation | Marge pro kg sinkt > 10 % |
 | Werbekonto gesperrt oder Anzeigen abgelehnt | niedrig | mittel | Zwei Admins im Business Manager, 2FA, Richtlinien beachten | Anzeigen-Ablehnungen |
 | Algorithmus-Änderung senkt Reichweite | hoch | mittel | Eigene Kanäle stärken (Newsletter, Website, Google), Kanal-Mix | Reichweite −30 % ohne erkennbaren Grund |
-| Negative Bewertungen/Shitstorm | niedrig | mittel | Krisenplan und Antwortvorlagen (Playbook), schnelle ehrliche Reaktion | Mehrere 1–2-★-Bewertungen in kurzer Zeit |
+| Negative Bewertungen/Shitstorm | niedrig | mittel | Krisenplan und Antwortvorlagen (Playbook, Kapitel 13), schnelle ehrliche Reaktion | Mehrere 1–2-★-Bewertungen in kurzer Zeit |
 | Lieferengpass beliebter Kaffees (Namen verschwinden) | mittel | mittel | „Abschied“ als Story nutzen („Tschüss, Dörte – bis zur nächsten Ernte“), Nachfolger ankündigen | Bestand < 4 Wochen |
 | Winterflaute in der Espressobar | hoch | mittel | Workshops, Events, Lokal-Angebote für Einheimische in Jan/Feb | Bons < Vorjahr |
 | EUDR-Pflichten beim Direktimport | mittel | mittel | Mit Importpartnern Sorgfaltspflichten klären, Geodaten der Farmen sammeln (nutzbar im Bohnen-Pass) | Neue Fristen/Anforderungen (*Stand prüfen*) |
@@ -993,7 +993,7 @@ Heute ist Donnerstag, der 24.09.2026. Tag des Kaffees ist in einer Woche – los
 ### Woche 1 · 24.09. – 30.09. (Sprint „Tag des Kaffees“)
 
 - [ ] Dieses Dokument gemeinsam lesen, Rollen (Kapitel 12) festlegen, offene Fragen (Kapitel 16) beantworten
-- [ ] Tag des Kaffees (Do, 01.10.) planen: Aktion in beiden Cafés + Reel + Story-Serie + Google-Posts (Vorlage im Playbook)
+- [ ] Tag des Kaffees (Do, 01.10.) planen: Aktion in beiden Cafés + Reel + Story-Serie + Google-Posts (siehe Playbook, Kapitel 6)
 - [ ] Röstbrüder Studio starten: Kanäle und Team in `/einstellungen` anlegen, Demo-Daten durch echte Daten ersetzen
 - [ ] Anlässe Q4 in `/ideen` prüfen: Zwiebelmarkt-Termin, Weihnachtsmarkt-Termin, Versandschluss Weihnachten eintragen
 - [ ] Baseline-Werte für alle SMART-Ziele sammeln (Shop, Abo, Kasse, Instagram, Newsletter, Google)
@@ -1005,14 +1005,14 @@ Heute ist Donnerstag, der 24.09.2026. Tag des Kaffees ist in einer Woche – los
 - [ ] Tracking-Audit: Was ist installiert? Consent korrekt? Conversions messbar? Maßnahmenliste erstellen
 - [ ] Zwiebelmarkt (voraussichtlich 09.–11.10., *Termin prüfen*): Sonderöffnungszeiten, Aktion, Content-Plan
 - [ ] Bewertungskarten mit QR-Code für beide Cafés drucken lassen
-- [ ] Hashtag-Sets und Caption-Vorlagen aus dem Playbook in die Studio-Bibliothek übernehmen
+- [ ] Hashtag-Sets und Caption-Vorlagen aus dem Playbook (Kapitel 8) in die Studio-Bibliothek übernehmen
 
 ### Woche 3 · 08.10. – 14.10.
 
 - [ ] Baseline in der SMART-Tabelle eintragen, Zielwerte final beschließen
 - [ ] Fotoshooting buchen/durchführen (Brüder, Röstung, Hände, Dampf, beide Cafés, Produkte, Geschenkboxen)
 - [ ] Geschenk-Sortiment Q4 festlegen: Geschenk-Abo, Workshop-Gutschein, Boxen, digitaler Gutschein; Verpackung bestellen
-- [ ] Black-Friday-Strategie entscheiden (Rabatt vs. Mehrwert – siehe Playbook Kapitel 8)
+- [ ] Black-Friday-Strategie entscheiden (Rabatt vs. Mehrwert – siehe Playbook, Kapitel 9.6)
 - [ ] Newsletter: Anmeldeformular auf Website und im Café (QR), Willkommensstrecke (3 Mails) aufsetzen
 - [ ] Meta Business Manager + Werbekonto prüfen: zwei Admins, 2FA, Pixel/CAPI, Katalog
 
@@ -1021,7 +1021,7 @@ Heute ist Donnerstag, der 24.09.2026. Tag des Kaffees ist in einer Woche – los
 - [ ] Consent Mode v2 und Conversion-Tracking live und mit Testkäufen geprüft
 - [ ] Kampagne „Lokal Awareness“ (Budget S) starten, UTM-Links über Studio-Builder
 - [ ] Geschenk-Kategorie im Shop anlegen, Geschenk-Abo-Produkt vorbereiten (Go-live spätestens 09.11.)
-- [ ] 3 Hotels und die Touristinfo für Kooperation ansprechen (Vorlage im Playbook anpassen)
+- [ ] 3 Hotels und die Touristinfo für Kooperation ansprechen (Outreach-Vorlage aus Playbook-Kapitel 12.3 anpassen)
 - [ ] Freelancer:in Content ausschreiben bzw. anfragen (falls Budget M)
 - [ ] Erster Wochen-Report im Studio, erste Monatsplanung November fertig
 

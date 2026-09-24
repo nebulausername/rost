@@ -18,6 +18,8 @@ export interface PlatformMeta {
   /** Diagramm-/Chip-Farbe (validierte Serienfarbe, folgt der Entität) */
   color: string
   charLimit: number | null
+  /** Max. Hashtags pro Beitrag (null = kein hartes Limit) */
+  hashtagLimit: number | null
   hashtagHint: string
   /** Beste Posting-Zeiten – Annahme, per Analytics validieren */
   bestTimes: { days: number[]; time: string; label: string }[]
@@ -32,6 +34,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'FB',
     color: 'var(--series-1)',
     charLimit: 5000,
+    hashtagLimit: null,
     hashtagHint: '1–3 Hashtags reichen',
     bestTimes: [
       { days: [2, 3, 4], time: '09:00', label: 'Di–Do 9:00' },
@@ -45,7 +48,8 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'IG',
     color: 'var(--series-2)',
     charLimit: 2200,
-    hashtagHint: '3–8 präzise Hashtags, max. 30',
+    hashtagLimit: 5,
+    hashtagHint: 'Max. 5 präzise Hashtags pro Beitrag (Instagram-Limit, Stand prüfen)',
     bestTimes: [
       { days: [2, 3, 4], time: '07:30', label: 'Di–Do 7:30 (Kaffee-Routine)' },
       { days: [1, 2, 3, 4, 5], time: '18:30', label: 'Mo–Fr 18:30' },
@@ -59,6 +63,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'TT',
     color: 'var(--series-3)',
     charLimit: 4000,
+    hashtagLimit: null,
     hashtagHint: '3–5 Hashtags, Suchbegriffe in den Text',
     bestTimes: [
       { days: [1, 2, 3, 4, 5], time: '12:00', label: 'Mittagspause 12:00' },
@@ -72,6 +77,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'G',
     color: 'var(--series-4)',
     charLimit: 1500,
+    hashtagLimit: 0,
     hashtagHint: 'Keine Hashtags – lokale Keywords nutzen',
     bestTimes: [{ days: [1, 4], time: '08:00', label: 'Mo & Do 8:00' }],
     formats: ['feed', 'offer', 'event'],
@@ -82,6 +88,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'P',
     color: 'var(--series-5)',
     charLimit: 500,
+    hashtagLimit: null,
     hashtagHint: 'Keywords im Titel & Text statt Hashtags',
     bestTimes: [{ days: [0, 5, 6], time: '20:00', label: 'Fr–So 20:00' }],
     formats: ['feed', 'video'],
@@ -92,6 +99,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'NL',
     color: 'var(--series-6)',
     charLimit: null,
+    hashtagLimit: 0,
     hashtagHint: 'Keine Hashtags – eine klare Handlung pro Mail',
     bestTimes: [
       { days: [4], time: '07:00', label: 'Do 7:00' },
@@ -105,6 +113,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'IN',
     color: 'var(--series-7)',
     charLimit: 3000,
+    hashtagLimit: null,
     hashtagHint: '3–5 Hashtags, B2B-Ton',
     bestTimes: [{ days: [2, 3, 4], time: '08:00', label: 'Di–Do 8:00' }],
     formats: ['feed', 'carousel', 'video', 'text'],
@@ -115,6 +124,7 @@ export const PLATFORMS: PlatformMeta[] = [
     short: 'YT',
     color: 'var(--series-8)',
     charLimit: 5000,
+    hashtagLimit: null,
     hashtagHint: '#shorts + 2–3 Themen-Hashtags',
     bestTimes: [{ days: [5, 6, 0], time: '17:00', label: 'Fr–So 17:00' }],
     formats: ['video', 'reel'],

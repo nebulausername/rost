@@ -21,7 +21,7 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dark'
 type Size = 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-white shadow-soft hover:bg-accent-hover active:translate-y-px',
+  primary: 'bg-accent-solid text-on-accent shadow-soft hover:bg-accent-solid-hover active:translate-y-px',
   secondary: 'bg-surface text-ink border border-line shadow-soft hover:border-line-strong hover:bg-surface-2',
   ghost: 'text-ink-2 hover:bg-surface-2 hover:text-ink',
   danger: 'bg-danger-soft text-danger hover:bg-danger hover:text-white',

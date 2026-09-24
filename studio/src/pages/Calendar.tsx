@@ -405,7 +405,7 @@ function MonthGrid({
                 <span
                   className={cn(
                     'inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular',
-                    today ? 'bg-accent text-white' : outside ? 'text-ink-3/60' : 'text-ink-2',
+                    today ? 'bg-accent-solid text-on-accent' : outside ? 'text-ink-3/60' : 'text-ink-2',
                   )}
                 >
                   {format(day, 'd')}

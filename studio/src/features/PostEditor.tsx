@@ -164,6 +164,12 @@ function EditorBody({
   }, [keyDates, draft.scheduledAt])
   const captionTags = extractHashtags(draft.caption)
   const allTags = Array.from(new Set([...captionTags, ...draft.hashtags]))
+  const tagRule = draft.platforms
+    .map((p) => ({ p, limit: PLATFORM[p].hashtagLimit }))
+    .filter((x): x is { p: Platform; limit: number } => x.limit != null && x.limit > 0)
+    .sort((a, b) => a.limit - b.limit)[0]
+  const tagLimit = tagRule?.limit ?? null
+  const tagLimitPlatform = tagRule ? PLATFORM[tagRule.p].label : ''
   const checklistDone = draft.checklist.filter((c) => c.done).length
   const showMetrics = draft.status === 'published' || when < new Date()
   const bestTimes = draft.platforms.flatMap((p) => PLATFORM[p].bestTimes.map((b) => ({ ...b, platform: p })))
@@ -424,7 +430,13 @@ function EditorBody({
             <div className="mt-4">
               <div className="mb-2 flex flex-wrap items-center gap-1.5">
                 <span className="text-xs font-medium text-ink-2">Hashtags</span>
-                <Badge tone={allTags.length > 30 ? 'danger' : allTags.length > 12 ? 'warning' : 'muted'}>{allTags.length}</Badge>
+                <Badge tone={tagLimit != null && allTags.length > tagLimit ? 'danger' : 'muted'}>
+                  {allTags.length}
+                  {tagLimit != null ? ` / ${tagLimit}` : ''}
+                </Badge>
+                {tagLimit != null && allTags.length > tagLimit ? (
+                  <span className="text-[11px] text-danger">{tagLimitPlatform} erlaubt max. {tagLimit}</span>
+                ) : null}
                 <span className="mx-1 h-4 w-px bg-line" />
                 {hashtagSets.map((s) => (
                   <button

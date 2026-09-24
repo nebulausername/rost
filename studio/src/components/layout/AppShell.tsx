@@ -53,7 +53,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <span className="flex items-center gap-2">
             <Plus className="size-4" /> Neuer Post
           </span>
-          <span className="rounded bg-white/20 px-1.5 text-[10px] font-semibold">N</span>
+          <span className="rounded bg-black/15 px-1.5 text-[10px] font-semibold">N</span>
         </Button>
       </div>
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2 scrollbar-thin" aria-label="Hauptnavigation">
@@ -79,7 +79,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                         <n.icon className={cn('size-4', isActive ? 'text-accent' : 'text-sidebar-muted group-hover:text-sidebar-ink')} />
                         <span className="flex-1 truncate">{n.label}</span>
                         {n.to === '/pipeline' && reviewCount > 0 ? (
-                          <span className="rounded-full bg-accent px-1.5 text-[10px] leading-4 font-bold text-white" title="Wartet auf Freigabe">
+                          <span className="rounded-full bg-accent-solid px-1.5 text-[10px] leading-4 font-bold text-on-accent" title="Wartet auf Freigabe">
                             {reviewCount}
                           </span>
                         ) : null}

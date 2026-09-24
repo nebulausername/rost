@@ -580,12 +580,12 @@ flowchart TD
     CP --> FRG["Offene Freigaben"]
     KAL --> ED["Post-Editor (Drawer)"]
     PIPE --> ED
-    ID["Ideen und Jahresplan"] -- "Idee → Post" --> ED
-    BIB["Bibliothek"] -. "Vorlagen, Hashtags" .-> ED
+    ID["Ideen und Jahresplan"] -->|"Idee → Post"| ED
+    BIB["Bibliothek"] -.->|"Vorlagen, Hashtags"| ED
     KAMP --> KD["Kampagnen-Detail"]
-    KD -- "Kampagnen-Verknüpfung" --> ED
+    KD -->|"Kampagnen-Verknüpfung"| ED
     BUD["Budget-Planer"] --> KAMP
-    ANA["Analytics"] -. "Beste Zeit, Top-Posts" .-> ED
+    ANA["Analytics"] -.->|"Beste Zeit, Top-Posts"| ED
 ```
 
 ### 5.2 Wireframes
@@ -689,7 +689,7 @@ Hinweise: Chips tragen Plattformfarbe (12 % Fläche + Balken) und Status-Symbol.
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Hinweise: Zeichenzähler je Kanal ([Richtwert] Instagram 2.200, TikTok 2.200, Facebook sehr lang, LinkedIn 3.000, Google-Post 1.500, Pinterest-Beschreibung 500) – der **strengste** gewählte Kanal bestimmt die Warnung. Hashtag-Zähler mit Limit je Kanal (Instagram erlaubt inzwischen nur noch wenige Hashtags pro Beitrag, aktuell max. 5 – Stand prüfen und in `/einstellungen` pflegen); Hashtag-Sets sind Pools, aus denen der Editor passende Tags vorschlägt. „Beste Zeit“ stammt aus der Heatmap in `/analytics` und ist bis zur Datenbasis von ≥ 8 Wochen als **[Annahme]** gekennzeichnet.
+Hinweise: Zeichenzähler je Kanal ([Richtwert, Stand prüfen] Instagram 2.200, TikTok 4.000, Facebook sehr lang, LinkedIn 3.000, Google-Post 1.500, Pinterest-Beschreibung 500) – der **strengste** gewählte Kanal bestimmt die Warnung. Hashtag-Zähler mit Limit je Kanal (Instagram erlaubt inzwischen nur noch wenige Hashtags pro Beitrag, aktuell max. 5 – Stand prüfen und in `/einstellungen` pflegen); Hashtag-Sets sind Pools, aus denen der Editor passende Tags vorschlägt. „Beste Zeit“ stammt aus der Heatmap in `/analytics` und ist bis zur Datenbasis von ≥ 8 Wochen als **[Annahme]** gekennzeichnet.
 
 #### Kampagnen-Detail (`/kampagnen/:id`)
 
