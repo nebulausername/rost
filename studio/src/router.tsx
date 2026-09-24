@@ -47,6 +47,7 @@ export const router = createBrowserRouter([
       { path: 'budget', lazy: () => import('./pages/Budget').then((m) => ({ Component: m.BudgetPage })) },
       { path: 'analytics', lazy: () => import('./pages/Analytics').then((m) => ({ Component: m.AnalyticsPage })) },
       { path: 'bibliothek', lazy: () => import('./pages/Library').then((m) => ({ Component: m.LibraryPage })) },
+      { path: 'report', lazy: () => import('./pages/Report').then((m) => ({ Component: m.ReportPage })) },
       { path: 'website', lazy: () => import('./pages/Website').then((m) => ({ Component: m.WebsitePage })) },
       { path: 'einstellungen', lazy: () => import('./pages/Settings').then((m) => ({ Component: m.SettingsPage })) },
       { path: '*', element: <NotFoundPage /> },

@@ -158,7 +158,7 @@ function useGlobalShortcuts() {
   const navigate = useNavigate()
   useEffect(() => {
     let gPressed = 0
-    const routes: Record<string, string> = { c: '/studio', k: '/studio/kalender', p: '/studio/pipeline', i: '/studio/ideen', w: '/studio/kampagnen', b: '/studio/budget', a: '/studio/analytics', l: '/studio/bibliothek', s: '/studio/website' }
+    const routes: Record<string, string> = { c: '/studio', k: '/studio/kalender', p: '/studio/pipeline', i: '/studio/ideen', w: '/studio/kampagnen', b: '/studio/budget', a: '/studio/analytics', l: '/studio/bibliothek', s: '/studio/website', r: '/studio/report' }
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
       const typing = t.closest('input, textarea, select, [contenteditable="true"]')
@@ -212,13 +212,22 @@ export function AppShell() {
 
   useEffect(() => {
     document.title = current ? `${current.label} · Röstbrüder Studio` : 'Röstbrüder Studio'
-    window.scrollTo({ top: 0 })
   }, [current])
+
+  // Beim Seitenwechsel nach oben – oder zum Anker (#kanaele), sobald die Seite geladen ist
+  useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo({ top: 0 })
+      return
+    }
+    const t = setTimeout(() => document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250)
+    return () => clearTimeout(t)
+  }, [location.pathname, location.hash])
 
   return (
     <div className="min-h-dvh">
       {/* Desktop-Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block print:hidden">
         <Sidebar />
       </aside>
 
@@ -245,8 +254,8 @@ export function AppShell() {
         </div>
       ) : null}
 
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-line/70 bg-canvas/85 backdrop-blur-md">
+      <div className="lg:pl-64 print:pl-0">
+        <header className="sticky top-0 z-20 border-b border-line/70 bg-canvas/85 backdrop-blur-md print:hidden">
           <div className="mx-auto flex h-14 max-w-[1500px] items-center gap-2 px-4 md:px-6 xl:px-8">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setNav(true)} aria-label="Navigation öffnen">
               <Menu className="size-5" />
@@ -277,7 +286,7 @@ export function AppShell() {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1500px] px-4 py-6 md:px-6 md:py-8 xl:px-8">
+        <main className="mx-auto max-w-[1500px] px-4 py-6 md:px-6 md:py-8 xl:px-8 print:p-0">
           <Outlet />
         </main>
       </div>

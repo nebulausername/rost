@@ -205,6 +205,8 @@ export function CockpitPage() {
         </div>
       </section>
 
+      <Onboarding />
+
       {/* KPIs */}
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1" aria-label="Kennzahlen">
         <StatTile
@@ -593,6 +595,70 @@ export function CockpitPage() {
         <span>Handgeröstet in Weimar – geplant im Röstbrüder Studio.</span>
       </div>
     </div>
+  )
+}
+
+const STEPS = [
+  { id: 'kanaele', title: 'Kanäle & Follower eintragen', text: 'Handles und aktuelle Follower-Zahlen – Basis für Analytics.', to: '/studio/einstellungen#kanaele' },
+  { id: 'sortiment', title: 'Sortiment & Preise prüfen', text: 'Kaffees, Preise und Aromen mit dem echten Shop abgleichen.', to: '/studio/website?tab=products' },
+  { id: 'zeiten', title: 'Öffnungszeiten bestätigen', text: 'Beide Cafés – erscheint live auf der Website.', to: '/studio/website?tab=cafes' },
+  { id: 'budget', title: 'Werbebudget festlegen', text: 'Szenario S, M oder L wählen und Monate anpassen.', to: '/studio/budget' },
+  { id: 'post', title: 'Ersten echten Post planen', text: 'Mit Hook-Ideen, Vorschau und Checkliste.', to: '/studio/kalender' },
+  { id: 'demo', title: 'Demo-Daten ersetzen', text: 'Unter Einstellungen → Daten leeren, wenn ihr startklar seid.', to: '/studio/einstellungen#daten' },
+]
+
+function Onboarding() {
+  const settings = useStore((s) => s.settings)
+  const update = useStore((s) => s.updateSettings)
+  const done = settings.onboardingDone ?? []
+  if (settings.onboardingHidden) return null
+  const toggle = (id: string) => update({ onboardingDone: done.includes(id) ? done.filter((x) => x !== id) : [...done, id] })
+  const pct = Math.round((done.length / STEPS.length) * 100)
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.14em] text-accent-text uppercase">Erste Schritte · {done.length}/{STEPS.length}</p>
+          <h2 className="mt-1 font-display text-xl font-semibold text-ink">Vom Demo zum echten Röstbrüder-Studio</h2>
+          <p className="mt-1 text-sm text-ink-2">Sechs Schritte, dann laufen hier eure echten Zahlen. Abhaken, was erledigt ist.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-40">
+            <Meter value={done.length} max={STEPS.length} tone={pct === 100 ? 'success' : 'accent'} label="Fortschritt Einrichtung" />
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => update({ onboardingHidden: true })}>
+            Ausblenden
+          </Button>
+        </div>
+      </div>
+      <ol className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+        {STEPS.map((st, i) => {
+          const ok = done.includes(st.id)
+          return (
+            <li key={st.id} className={cn('flex items-start gap-3 bg-surface p-4', ok && 'bg-surface-2/60')}>
+              <button
+                type="button"
+                onClick={() => toggle(st.id)}
+                aria-pressed={ok}
+                aria-label={`${st.title} ${ok ? 'als offen markieren' : 'als erledigt markieren'}`}
+                className={cn(
+                  'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-colors',
+                  ok ? 'border-success bg-success text-white' : 'border-line-strong text-ink-3 hover:border-accent hover:text-accent-text',
+                )}
+              >
+                {ok ? '✓' : i + 1}
+              </button>
+              <div className="min-w-0">
+                <Link to={st.to} className={cn('text-sm font-semibold hover:underline', ok ? 'text-ink-3 line-through' : 'text-ink')}>
+                  {st.title}
+                </Link>
+                <p className="mt-0.5 text-xs text-ink-3">{st.text}</p>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </Card>
   )
 }
 

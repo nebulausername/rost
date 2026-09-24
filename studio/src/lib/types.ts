@@ -183,6 +183,9 @@ export interface Settings {
   monthlyBudgetCap: number
   demoData: boolean
   brandName: string
+  /** Erledigte Schritte der Einrichtungs-Checkliste im Cockpit */
+  onboardingDone?: string[]
+  onboardingHidden?: boolean
 }
 
 // ---------------------------------------------------------------------------

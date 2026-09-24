@@ -20,6 +20,7 @@ import { DEFAULT_CHECKLIST, FORMATS, KEYDATE_KINDS, LOCATIONS, MEDIA_TONES, PILL
 import { occurrencesBetween } from '../lib/keydates'
 import { toast, useStore, useUi, type PostDraftPreset } from '../lib/store'
 import type { MediaTone, Platform, Post, PostFormat, PostMetrics } from '../lib/types'
+import { suggestHooks } from '../lib/hooks'
 import { buildUtmUrl, cn, compressImage, extractHashtags, formatDe, slugify, uid } from '../lib/utils'
 import { PostPreview } from './PostPreview'
 
@@ -156,6 +157,8 @@ function EditorBody({
   const [tagInput, setTagInput] = useState('')
   const [checkInput, setCheckInput] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [hooksOpen, setHooksOpen] = useState(false)
+  const products = useStore((s) => s.products)
 
   const when = parseISO(draft.scheduledAt)
   const dayOcc = useMemo(() => {
@@ -408,6 +411,9 @@ function EditorBody({
                   </option>
                 ))}
               </Select>
+              <Button size="sm" variant={hooksOpen ? 'dark' : 'secondary'} onClick={() => setHooksOpen((o) => !o)} aria-expanded={hooksOpen}>
+                <Sparkles className="size-3.5" /> Hook-Ideen
+              </Button>
               <div className="flex flex-wrap gap-0.5 rounded-lg border border-line bg-surface p-0.5">
                 {EMOJIS.map((e) => (
                   <button key={e} type="button" onClick={() => insertAtCursor(e)} className="size-7 rounded-md text-sm hover:bg-surface-2" aria-label={`Emoji ${e} einfügen`}>
@@ -416,6 +422,27 @@ function EditorBody({
                 ))}
               </div>
             </div>
+            {hooksOpen ? (
+              <div className="mb-2 animate-pop-in rounded-xl border border-line bg-surface-2/60 p-2">
+                <p className="px-1.5 pb-1.5 text-[11px] text-ink-3">Erste Zeile entscheidet: Klick setzt den Hook an den Anfang der Caption.</p>
+                <ul className="grid gap-1 sm:grid-cols-2">
+                  {suggestHooks(draft.pillar, `${draft.title} ${draft.caption}`, products).map((h) => (
+                    <li key={h}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange({ caption: draft.caption ? `${h}\n\n${draft.caption}` : h })
+                          setHooksOpen(false)
+                        }}
+                        className="w-full rounded-lg bg-surface px-2.5 py-2 text-left text-xs text-ink shadow-soft transition-colors hover:bg-accent-soft"
+                      >
+                        {h}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <Textarea
               ref={captionRef}
               value={draft.caption}

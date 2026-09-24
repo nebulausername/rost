@@ -151,6 +151,17 @@ export function useDialog(open: boolean, onClose: () => void, ref: RefObject<HTM
   }, [open, ref])
 }
 
+/** Kurzes „Hinzugefügt ✓“-Feedback für Warenkorb-Buttons */
+export function useAddedFeedback(ms = 1600) {
+  const [added, setAdded] = useState(false)
+  useEffect(() => {
+    if (!added) return
+    const t = window.setTimeout(() => setAdded(false), ms)
+    return () => window.clearTimeout(t)
+  }, [added, ms])
+  return [added, () => setAdded(true)] as const
+}
+
 /** Bevorzugt reduzierte Bewegung? (live) */
 export function useReducedMotion() {
   const [reduced, setReduced] = useState(() => {
