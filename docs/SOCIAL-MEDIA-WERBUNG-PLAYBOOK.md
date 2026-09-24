@@ -50,7 +50,7 @@
 
 ## 2. Kanal-Playbooks
 
-Beste Zeiten sind **[Annahme]** auf Basis typischer Nutzungsmuster und werden nach 8 Wochen mit der Posting-Zeit-Heatmap in `/analytics` validiert.
+Beste Zeiten sind **[Annahme]** auf Basis typischer Nutzungsmuster und werden nach 8 Wochen mit der Posting-Zeit-Heatmap in `/studio/analytics` validiert.
 
 ### 2.1 Instagram – die Hauptbühne
 
@@ -404,7 +404,7 @@ Hero-Posts pro Woche. **Zusätzlich jede Woche:** Stories an 5–7 Tagen · 1 Go
 
 ## 7. Jahres-Anlässe Okt 2026 – Sep 2027
 
-Alle Anlässe sind im Studio unter `/ideen` → Anlässe-Kalender gepflegt und erscheinen im Redaktionskalender. Termine mit „prüfen“ vor Planung bestätigen.
+Alle Anlässe sind im Studio unter `/studio/ideen` → Anlässe-Kalender gepflegt und erscheinen im Redaktionskalender. Termine mit „prüfen“ vor Planung bestätigen.
 
 | Datum | Anlass | Marketing-Winkel | Säule | Kanäle |
 |---|---|---|---|---|
@@ -444,7 +444,7 @@ Alle Anlässe sind im Studio unter `/ideen` → Anlässe-Kalender gepflegt und e
 
 ## 8. Caption-Vorlagen und Hashtag-Sets
 
-Alle Vorlagen liegen in `/bibliothek` → Caption-Vorlagen und lassen sich im Post-Editor mit `/` einfügen. `{Platzhalter}` springen per Tab.
+Alle Vorlagen liegen in `/studio/bibliothek` → Caption-Vorlagen und lassen sich im Post-Editor mit `/` einfügen. `{Platzhalter}` springen per Tab.
 
 ### 8.1 Caption-Vorlagen
 
@@ -757,7 +757,7 @@ Die Sets sind **Pools**: Pro Beitrag wählt ihr 3–5 passende Tags (Instagram-L
 | Sep 2027 | 350 € | 800 € | 1.900 € | Vorbereitung Tag des Kaffees, Abo-Push |
 | **Summe** | **3.600 €** | **9.600 €** | **24.000 €** | Q4 = 36–38 % des Jahresbudgets |
 
-Empfohlener Pfad: **Oktober nach S, ab November M-Kalender.** Pflege im Studio unter `/budget` (Monat × Kanal), Ist-Werte monatlich nachtragen.
+Empfohlener Pfad: **Oktober nach S, ab November M-Kalender.** Pflege im Studio unter `/studio/budget` (Monat × Kanal), Ist-Werte monatlich nachtragen.
 
 ---
 
@@ -778,7 +778,7 @@ Empfohlener Pfad: **Oktober nach S, ab November M-Kalender.** Pflege im Studio u
 | 9 | Jun | Google-Anzeigentitel Lokal vs. Qualität | „Kaffeerösterei in Weimar“ | „Jede Bohne hat einen Namen“ | CTR | Google K6 |
 | 10 | Jul | Abo-Vorteil prominent – **ohne** Vorauswahl | Einmalkauf/Abo neutral | Abo-Vorteil als Badge hervorgehoben | Abo-Anteil | Website |
 
-**Regeln:** Nur eine Variable pro Test · mind. 7 Tage Laufzeit · für CTR-Tests möglichst ≥ 1.000 Impressionen je Variante; bei kleinen Conversion-Zahlen Ergebnisse als **Tendenz** werten · Abo nie vorauswählen (Dark Pattern) · Ergebnis mit Learning in `/analytics` bzw. als Idee-Karte dokumentieren.
+**Regeln:** Nur eine Variable pro Test · mind. 7 Tage Laufzeit · für CTR-Tests möglichst ≥ 1.000 Impressionen je Variante; bei kleinen Conversion-Zahlen Ergebnisse als **Tendenz** werten · Abo nie vorauswählen (Dark Pattern) · Ergebnis mit Learning in `/studio/analytics` bzw. als Idee-Karte dokumentieren.
 
 ### 11.2 UTM-Konvention
 

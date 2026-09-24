@@ -16,14 +16,10 @@ export function useDocumentTitle(title: string) {
 
 /** true, sobald das Element (einmalig) in den sichtbaren Bereich kommt */
 export function useInView<T extends Element>(ref: RefObject<T | null>, rootMargin = '0px 0px -10% 0px') {
-  const [seen, setSeen] = useState(false)
+  const [seen, setSeen] = useState(() => typeof IntersectionObserver === 'undefined')
   useEffect(() => {
     const el = ref.current
     if (!el || seen) return
-    if (typeof IntersectionObserver === 'undefined') {
-      setSeen(true)
-      return
-    }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {

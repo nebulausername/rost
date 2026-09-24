@@ -563,11 +563,12 @@ Mobil: Zusammenfassung als einklappbare Leiste am unteren Rand („Dein Abo · X
 
 | Gruppe | Module (Route) |
 |---|---|
-| **Planen** | Cockpit (`/`) · Redaktionskalender (`/kalender`) · Content-Pipeline (`/pipeline`) · Ideen & Jahresplan (`/ideen`) |
-| **Werben** | Kampagnen & Werbung (`/kampagnen`, `/kampagnen/:id`) · Budget-Planer (`/budget`) |
-| **Auswerten** | Analytics (`/analytics`) |
-| **Ressourcen** | Bibliothek (`/bibliothek`) |
-| **System** | Einstellungen (`/einstellungen`) |
+| **Planen** | Cockpit (`/studio`) · Redaktionskalender (`/studio/kalender`) · Content-Pipeline (`/studio/pipeline`) · Ideen & Jahresplan (`/studio/ideen`) |
+| **Werben** | Kampagnen & Werbung (`/studio/kampagnen`, `/studio/kampagnen/:id`) · Budget-Planer (`/studio/budget`) |
+| **Auswerten** | Analytics (`/studio/analytics`) · Monatsreport (`/studio/report`) |
+| **Ressourcen** | Bibliothek (`/studio/bibliothek`) |
+| **Website** | Website & Shop (`/studio/website`) – pflegt Inhalte der öffentlichen Website unter `/` |
+| **System** | Einstellungen (`/studio/einstellungen`) |
 
 **Globale Elemente:** Sidebar (einklappbar auf Icon-Leiste) · Topbar mit Command Palette, „+ Neuer Post“, Freigabe-Glocke mit Zähler, Theme-Umschalter, Avatar · Post-Editor als Drawer, von überall per `N` erreichbar.
 **Mobil (< 768 px):** Bottom-Tab-Bar mit Cockpit · Kalender · **+** · Pipeline · Mehr. Der Editor öffnet im Vollbild; Kalender startet in der Agenda-Ansicht (Liste statt Raster).
@@ -627,7 +628,7 @@ flowchart TD
 
 Hinweise: KPI-Tiles zeigen Delta immer mit Text, Tooltip mit Formel (siehe Masterplan 11.2). Pacing > 110 % wird Kirsche und erscheint zusätzlich als Warnung. Klick auf eine Säule im Content-Mix filtert den Kalender.
 
-#### Redaktionskalender (`/kalender`, Monatsansicht)
+#### Redaktionskalender (`/studio/kalender`, Monatsansicht)
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
@@ -656,7 +657,7 @@ Hinweise: KPI-Tiles zeigen Delta immer mit Text, Tooltip mit Formel (siehe Maste
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Hinweise: Chips tragen Plattformfarbe (12 % Fläche + Balken) und Status-Symbol. Anlässe (`*`) liegen als Banner über dem Tag und kommen aus `/ideen`. Hover über Chip zeigt Mini-Vorschau; Klick öffnet den Editor. **Tastatur-Alternative zu Drag & Drop:** Chip fokussieren → `Alt+Pfeil` verschiebt um einen Tag, `M` öffnet „Verschieben nach …“.
+Hinweise: Chips tragen Plattformfarbe (12 % Fläche + Balken) und Status-Symbol. Anlässe (`*`) liegen als Banner über dem Tag und kommen aus `/studio/ideen`. Hover über Chip zeigt Mini-Vorschau; Klick öffnet den Editor. **Tastatur-Alternative zu Drag & Drop:** Chip fokussieren → `Alt+Pfeil` verschiebt um einen Tag, `M` öffnet „Verschieben nach …“.
 
 #### Post-Editor (Drawer mit Live-Vorschau)
 
@@ -689,9 +690,9 @@ Hinweise: Chips tragen Plattformfarbe (12 % Fläche + Balken) und Status-Symbol.
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Hinweise: Zeichenzähler je Kanal ([Richtwert, Stand prüfen] Instagram 2.200, TikTok 4.000, Facebook sehr lang, LinkedIn 3.000, Google-Post 1.500, Pinterest-Beschreibung 500) – der **strengste** gewählte Kanal bestimmt die Warnung. Hashtag-Zähler mit Limit je Kanal (Instagram erlaubt inzwischen nur noch wenige Hashtags pro Beitrag, aktuell max. 5 – Stand prüfen und in `/einstellungen` pflegen); Hashtag-Sets sind Pools, aus denen der Editor passende Tags vorschlägt. „Beste Zeit“ stammt aus der Heatmap in `/analytics` und ist bis zur Datenbasis von ≥ 8 Wochen als **[Annahme]** gekennzeichnet.
+Hinweise: Zeichenzähler je Kanal ([Richtwert, Stand prüfen] Instagram 2.200, TikTok 4.000, Facebook sehr lang, LinkedIn 3.000, Google-Post 1.500, Pinterest-Beschreibung 500) – der **strengste** gewählte Kanal bestimmt die Warnung. Hashtag-Zähler mit Limit je Kanal (Instagram erlaubt inzwischen nur noch wenige Hashtags pro Beitrag, aktuell max. 5 – Stand prüfen und in `/studio/einstellungen` pflegen); Hashtag-Sets sind Pools, aus denen der Editor passende Tags vorschlägt. „Beste Zeit“ stammt aus der Heatmap in `/studio/analytics` und ist bis zur Datenbasis von ≥ 8 Wochen als **[Annahme]** gekennzeichnet.
 
-#### Kampagnen-Detail (`/kampagnen/:id`)
+#### Kampagnen-Detail (`/studio/kampagnen/:id`)
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -761,7 +762,7 @@ Cockpit „Offene Freigaben“ → Review-Ansicht (Vorschau je Kanal links, Capt
 
 #### A4 · Monatsreport in 15 Minuten
 
-`/analytics` → Zeitraum „Letzter Monat“ → Abschnitte werden automatisch befüllt (Follower, Reichweite, Engagement je Kanal, Top-3/Flop-3-Posts, Säulen-Performance, Kampagnen-KPIs, Budget Plan vs. Ist) → Pflichtfelder „3 Learnings · 3 Entscheidungen“ → Export (Druckansicht/PDF, in Phase 1 zusätzlich JSON-Export aus `/einstellungen`).
+`/studio/report` (Monat wählen) → Abschnitte werden automatisch befüllt (Follower, Reichweite, Engagement je Kanal, Top-3/Flop-3-Posts, Säulen-Performance, Kampagnen-KPIs, Budget Plan vs. Ist) → Pflichtfelder „3 Learnings · 3 Entscheidungen“ → Export (Druckansicht/PDF, in Phase 1 zusätzlich JSON-Export aus `/studio/einstellungen`).
 
 ### 5.4 Tastaturkürzel [Vorschlag]
 
@@ -928,7 +929,7 @@ Einbuchstaben-Kürzel greifen nie, solange ein Eingabefeld fokussiert ist, und l
 | SEQ (Single Ease Question, 1–7) | Ø ≥ 5,5 |
 | SUS (System Usability Scale) | ≥ 75 (Website), ≥ 80 (Studio) |
 
-**Auswertung:** Befunde nach Schweregrad 1–4 (kosmetisch → blockierend) · alles mit Grad 3–4 wird vor Go-live behoben · Ergebnisse als Idee-Karten in `/ideen` (Tag „UX“) · Retest der geänderten Stellen mit 2–3 Personen.
+**Auswertung:** Befunde nach Schweregrad 1–4 (kosmetisch → blockierend) · alles mit Grad 3–4 wird vor Go-live behoben · Ergebnisse als Idee-Karten in `/studio/ideen` (Tag „UX“) · Retest der geänderten Stellen mit 2–3 Personen.
 
 ---
 

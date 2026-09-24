@@ -403,6 +403,8 @@ flowchart LR
 
 ## 6. Website-Relaunch roestbrueder.com
 
+> **Klickbarer Prototyp:** Die neue Website ist im Repo als funktionierender Prototyp umgesetzt (`studio/src/site/`, lokal unter `http://localhost:5173/`): Startseite, Shop & Produktseiten, Geschmacksfinder, Abo-Konfigurator, Workshop-Buchung, Cafés mit Live-Öffnungsstatus, Herkunft & Bohnen-Pass, Brühanleitungen mit Timer, Warenkorb & Kasse (Demo, keine echten Zahlungen). Inhalte kommen aus dem Studio-Modul **Website & Shop** – Bestellungen, Buchungen und Newsletter-Anmeldungen landen dort. Preise und Aromen sind Beispielwerte. Der Prototyp dient als Vorlage für Design und UX – egal ob die finale Umsetzung auf Shopify, WooCommerce oder headless läuft (siehe 6.7).
+
 ### 6.1 Ziele
 
 | Ziel | Messgröße | Zielwert [Vorschlag] |
@@ -609,16 +611,18 @@ Das Studio ist euer **Marketing-Betriebssystem**: Ein Ort für Ideen, Planung, F
 
 | Modul | Route | Zweck | Hauptnutzer:innen | Rhythmus |
 |---|---|---|---|---|
-| **Cockpit** | `/` | KPIs (Reichweite, Engagement-Rate, Follower-Zuwachs, Ad-Spend vs. Budget, ROAS), nächste Posts, aktive Kampagnen mit Pacing, Content-Mix nach Säulen, offene Freigaben | Collin, Vincent | täglich 2 Min. |
-| **Redaktionskalender** | `/kalender` | Monats-/Wochenansicht, Drag & Drop, Filter nach Kanal/Säule/Status, Anlässe im Kalender | alle | Mo-Planung |
-| **Content-Pipeline** | `/pipeline` | Kanban: Idee → Entwurf → Review → Freigegeben → Geplant → Veröffentlicht | alle | laufend |
+| **Cockpit** | `/studio` | KPIs (Reichweite, Engagement-Rate, Follower-Zuwachs, Ad-Spend vs. Budget, ROAS), nächste Posts, aktive Kampagnen mit Pacing, Content-Mix nach Säulen, offene Freigaben | Collin, Vincent | täglich 2 Min. |
+| **Redaktionskalender** | `/studio/kalender` | Monats-/Wochenansicht, Drag & Drop, Filter nach Kanal/Säule/Status, Anlässe im Kalender | alle | Mo-Planung |
+| **Content-Pipeline** | `/studio/pipeline` | Kanban: Idee → Entwurf → Review → Freigegeben → Geplant → Veröffentlicht | alle | laufend |
 | **Post-Editor** | Drawer | Kanäle, Format, Caption mit Zeichenlimit, Hashtag-Sets, Säule, Standort, Verantwortliche:r, Checkliste, Kampagnen-Verknüpfung, Live-Vorschau, „Beste Posting-Zeit“ | Team, Freelancer | laufend |
-| **Kampagnen & Werbung** | `/kampagnen`, `/kampagnen/:id` | Ziel, Kanäle, Budget/Tageslimit, Laufzeit, Zielgruppe & Radius, Angebot, Landingpage + UTM-Builder, KPIs, Pacing-Chart, Funnel | Collin (Vorschlag) | wöchentlich |
-| **Budget-Planer** | `/budget` | Jahresbudget Monat × Kanal, Plan vs. Ist | Collin, Vincent | monatlich |
-| **Ideen & Jahresplan** | `/ideen` | Ideen-Backlog mit Voting & Aufwand, Anlässe-Kalender, Idee → Post | alle | fortlaufend, Voting Mo |
-| **Analytics** | `/analytics` | Follower-Wachstum, Engagement je Kanal, Posting-Zeit-Heatmap, Top-Posts, Säulen-Performance | Collin, Vincent | monatlich |
-| **Bibliothek** | `/bibliothek` | Hashtag-Sets, Caption-Vorlagen, Markenstimme, Do's & Don'ts | alle | bei Bedarf |
-| **Einstellungen** | `/einstellungen` | Kanäle, Team, Export/Import (JSON), Demo-Daten zurücksetzen | Admin | selten |
+| **Kampagnen & Werbung** | `/studio/kampagnen`, `/studio/kampagnen/:id` | Ziel, Kanäle, Budget/Tageslimit, Laufzeit, Zielgruppe & Radius, Angebot, Landingpage + UTM-Builder, KPIs, Pacing-Chart, Funnel | Collin (Vorschlag) | wöchentlich |
+| **Budget-Planer** | `/studio/budget` | Jahresbudget Monat × Kanal, Plan vs. Ist | Collin, Vincent | monatlich |
+| **Ideen & Jahresplan** | `/studio/ideen` | Ideen-Backlog mit Voting & Aufwand, Anlässe-Kalender, Idee → Post | alle | fortlaufend, Voting Mo |
+| **Analytics** | `/studio/analytics` | Follower-Wachstum, Engagement je Kanal, Posting-Zeit-Heatmap, Top-Posts, Säulen-Performance | Collin, Vincent | monatlich |
+| **Bibliothek** | `/studio/bibliothek` | Hashtag-Sets, Caption-Vorlagen, Markenstimme, Do's & Don'ts | alle | bei Bedarf |
+| **Website & Shop** | `/studio/website` | Sortiment & Preise, Workshop-Termine, Öffnungszeiten, Aktionsbanner & Startseiten-Texte; Bestellungen, Buchungen und Newsletter-Anmeldungen der Website; Umsatz nach UTM-Quelle | Collin, Vincent | wöchentlich |
+| **Monatsreport** | `/studio/report` | Automatischer Report: Zusammenfassung, KPIs, Top-Posts, Kampagnen, Budget Plan vs. Ist, Learnings, Ausblick – druck- und PDF-fähig | Collin, Vincent | monatlich, 1. Montag |
+| **Einstellungen** | `/studio/einstellungen` | Kanäle, Team, Export/Import (JSON), Demo-Daten zurücksetzen | Admin | selten |
 
 **Content-Säulen im Studio (Schlüssel identisch mit Code):** `bohne` Bohne & Herkunft · `roesten` Röst-Handwerk · `cafe` Café-Leben Weimar · `bruehen` Brüh-Wissen · `brueder` Die Brüder & Team · `events` Events & Workshops · `shop` Shop & Abo.
 
@@ -994,8 +998,8 @@ Heute ist Donnerstag, der 24.09.2026. Tag des Kaffees ist in einer Woche – los
 
 - [ ] Dieses Dokument gemeinsam lesen, Rollen (Kapitel 12) festlegen, offene Fragen (Kapitel 16) beantworten
 - [ ] Tag des Kaffees (Do, 01.10.) planen: Aktion in beiden Cafés + Reel + Story-Serie + Google-Posts (siehe Playbook, Kapitel 6)
-- [ ] Röstbrüder Studio starten: Kanäle und Team in `/einstellungen` anlegen, Demo-Daten durch echte Daten ersetzen
-- [ ] Anlässe Q4 in `/ideen` prüfen: Zwiebelmarkt-Termin, Weihnachtsmarkt-Termin, Versandschluss Weihnachten eintragen
+- [ ] Röstbrüder Studio starten: Kanäle und Team in `/studio/einstellungen` anlegen, Demo-Daten durch echte Daten ersetzen
+- [ ] Anlässe Q4 in `/studio/ideen` prüfen: Zwiebelmarkt-Termin, Weihnachtsmarkt-Termin, Versandschluss Weihnachten eintragen
 - [ ] Baseline-Werte für alle SMART-Ziele sammeln (Shop, Abo, Kasse, Instagram, Newsletter, Google)
 
 ### Woche 2 · 01.10. – 07.10.
