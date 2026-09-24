@@ -8,6 +8,7 @@ import type {
   BudgetPlan,
   CafeLocation,
   Campaign,
+  ContactMessage,
   CaptionTemplate,
   ChannelAccount,
   DailyStat,
@@ -45,6 +46,7 @@ export interface DataState {
   orders: Order[]
   bookings: Booking[]
   subscribers: Subscriber[]
+  messages: ContactMessage[]
 }
 
 interface Actions {
@@ -85,6 +87,8 @@ interface Actions {
   bookWorkshop: (b: Booking) => { ok: boolean; reason?: string }
   placeOrder: (o: Order) => void
   subscribe: (email: string, source: string) => boolean
+  sendMessage: (m: ContactMessage) => void
+  setMessageDone: (id: string, done: boolean) => void
   updateCafe: (id: CafeLocation['id'], patch: Partial<CafeLocation>) => void
   updateSite: (patch: Partial<SiteSettings>) => void
   // Einstellungen & Daten
@@ -109,6 +113,7 @@ function freshSite() {
     workshops,
     cafes: CAFES,
     site: SITE_SETTINGS,
+    messages: [] as ContactMessage[],
     ...seedSales(workshops),
   }
 }
@@ -240,6 +245,8 @@ export const useStore = create<DataState & Actions>()(
         set((s) => ({ subscribers: [{ email: e, source, createdAt: new Date().toISOString() }, ...s.subscribers] }))
         return true
       },
+      sendMessage: (m) => set((s) => ({ messages: [m, ...(s.messages ?? [])] })),
+      setMessageDone: (id, done) => set((s) => ({ messages: (s.messages ?? []).map((m) => (m.id === id ? { ...m, done } : m)) })),
       updateCafe: (id, patch) => set((s) => ({ cafes: s.cafes.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
       updateSite: (patch) => set((s) => ({ site: { ...s.site, ...patch } })),
 

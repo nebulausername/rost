@@ -3,7 +3,7 @@ import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Field, Input, Select, Textarea } from '../../components/ui/primitives'
 import { toast, useStore } from '../../lib/store'
-import { cn } from '../../lib/utils'
+import { cn, uid } from '../../lib/utils'
 import { CoffeeBag, Container, Eyebrow, OpenBadge, SectionHeading, SiteButton, siteButtonClass } from '../components'
 import { useDocumentTitle } from '../content/hooks'
 import { BeanGlyph } from '../content/icons'
@@ -235,6 +235,7 @@ function Team() {
 
 function Contact() {
   const cafes = useStore((s) => s.cafes)
+  const sendMessage = useStore((s) => s.sendMessage)
   const [form, setForm] = useState({ name: '', email: '', topic: 'Allgemein', message: '' })
   const [sent, setSent] = useState(false)
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -245,8 +246,17 @@ function Contact() {
       toast({ title: 'Fast geschafft', description: 'Bitte Name, gültige E-Mail und eine kurze Nachricht angeben.', tone: 'danger' })
       return
     }
+    sendMessage({
+      id: uid('msg'),
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
+      topic: form.topic,
+      message: form.message.trim(),
+      createdAt: new Date().toISOString(),
+      done: false,
+    })
     setSent(true)
-    toast({ title: 'Nachricht gesendet (Demo)', description: 'Im Prototyp wird nichts verschickt – im echten Shop landet sie bei uns.', tone: 'success' })
+    toast({ title: 'Nachricht gesendet', description: 'Im Prototyp landet sie im Studio unter „Website & Shop“ – es wird keine E-Mail verschickt.', tone: 'success' })
   }
 
   return (

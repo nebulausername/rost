@@ -297,7 +297,18 @@ export interface Booking {
   email: string
   seats: number
   gift: boolean
+  giftNote?: string
   createdAt: string
+}
+
+export interface ContactMessage {
+  id: string
+  name: string
+  email: string
+  topic: string
+  message: string
+  createdAt: string
+  done: boolean
 }
 
 export interface Subscriber {

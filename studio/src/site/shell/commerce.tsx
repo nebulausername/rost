@@ -155,7 +155,7 @@ export function ProductCard({
         </div>
         <p className="mt-0.5 text-sm text-ink-3">{product.subtitle}</p>
         <NoteChips notes={product.notes} className="mt-3" />
-        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-3 pt-5">
           {isGift ? <span className="text-xs text-ink-3">mit Brühkarte</span> : <RoastMeter roast={product.roast} />}
           {addVariant === 'icon' ? (
             <IconAddButton

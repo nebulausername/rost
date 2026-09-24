@@ -248,8 +248,8 @@ function Story() {
                 <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2 md:text-xl">{c.text}</p>
                 <ul className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
                   {c.facts.map((f) => (
-                    <li key={f} className="rounded-2xl border border-line bg-surface p-4 text-sm leading-snug font-medium text-ink">
-                      <Check className="mb-2 size-4 text-accent-text" aria-hidden />
+                    <li key={f} className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface p-3 text-sm leading-snug font-medium text-ink sm:block sm:p-4">
+                      <Check className="size-4 shrink-0 text-accent-text sm:mb-2" aria-hidden />
                       {f}
                     </li>
                   ))}

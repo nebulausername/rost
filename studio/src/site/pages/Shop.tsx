@@ -133,7 +133,7 @@ export function ShopPage() {
           <div className="flex flex-col gap-3 lg:items-end">
             <p className="inline-flex items-center gap-2.5 rounded-full bg-success-soft px-4 py-2 text-sm font-medium text-success">
               <Truck className="size-4" aria-hidden />
-              Versandkostenfrei ab {price(FREE_SHIPPING_FROM)} · Abo immer
+              Versandkostenfrei ab {price(FREE_SHIPPING_FROM)} · im Abo immer
             </p>
             <Link to="/geschmacksfinder" className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent-text">
               <Sparkles className="size-4 text-accent" aria-hidden />

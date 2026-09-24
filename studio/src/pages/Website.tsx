@@ -32,7 +32,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'workshops', label: 'Workshops' },
   { value: 'cafes', label: 'Cafés' },
   { value: 'content', label: 'Startseite & Aktionen' },
-  { value: 'orders', label: 'Bestellungen & Newsletter' },
+  { value: 'orders', label: 'Bestellungen, Anfragen & Newsletter' },
 ]
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -741,6 +741,44 @@ function Content() {
 // Bestellungen & Newsletter
 // ---------------------------------------------------------------------------
 
+function Messages() {
+  const messages = useStore((s) => s.messages ?? [])
+  const setDone = useStore((s) => s.setMessageDone)
+  const open = messages.filter((m) => !m.done).length
+  return (
+    <Card>
+      <CardHeader title="Kontaktanfragen" subtitle={`${messages.length} Nachrichten über das Formular auf „Über uns“ · ${open} offen`} icon={<Mail className="size-4" />} />
+      {messages.length ? (
+        <ul className="divide-y divide-line px-5 pb-3">
+          {messages.map((m) => (
+            <li key={m.id} className={cn('flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between', m.done && 'opacity-60')}>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">
+                  {m.name} <span className="font-normal text-ink-3">· {m.email}</span>
+                </p>
+                <p className="mt-0.5 text-[11px] text-ink-3">
+                  {m.topic} · {formatDe(m.createdAt, "d. MMM, HH:mm 'Uhr'")}
+                </p>
+                <p className="mt-1.5 text-sm whitespace-pre-line text-ink-2">{m.message}</p>
+              </div>
+              <div className="flex shrink-0 gap-1.5">
+                <a href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: ${m.topic}`)}`}>
+                  <Button size="sm">Antworten</Button>
+                </a>
+                <Button size="sm" variant={m.done ? 'ghost' : 'secondary'} onClick={() => setDone(m.id, !m.done)}>
+                  {m.done ? 'Wieder öffnen' : 'Erledigt'}
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="px-5 pb-6 text-sm text-ink-3">Noch keine Anfragen – sie erscheinen hier, sobald jemand das Kontaktformular auf der Website nutzt.</p>
+      )}
+    </Card>
+  )
+}
+
 function Orders() {
   const subscribers = useStore((s) => s.subscribers)
   const bookings = useStore((s) => s.bookings)
@@ -755,6 +793,7 @@ function Orders() {
         <CardHeader title="Bestellungen" subtitle="Alle Bestellungen aus dem Website-Checkout (Demo – keine echten Zahlungen)" icon={<ShoppingBag className="size-4" />} />
         <OrderTable />
       </Card>
+      <Messages />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader title="Workshop-Buchungen" subtitle={`${bookings.length} Buchungen`} icon={<Users className="size-4" />} />
@@ -771,6 +810,7 @@ function Orders() {
                     <span className="block text-[11px] text-ink-3">
                       {w?.title ?? 'Workshop'} {s ? `· ${formatDe(s.startsAt, 'd. MMM, HH:mm')}` : ''}
                     </span>
+                    {b.giftNote ? <span className="mt-0.5 block text-[11px] text-accent-text italic">„{b.giftNote}“</span> : null}
                   </span>
                   {b.gift ? <Badge tone="accent">Geschenk</Badge> : null}
                 </li>

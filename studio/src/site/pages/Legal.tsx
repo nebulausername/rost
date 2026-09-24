@@ -48,7 +48,7 @@ export function LegalPage() {
         ))}
       </nav>
 
-      <div className="grid gap-12 lg:grid-cols-[240px_1fr] lg:gap-16">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16">
         <aside className="hidden lg:block">
           <div className="sticky top-32">
             <p className="text-xs font-semibold tracking-[0.18em] text-ink-3 uppercase">Inhalt</p>
@@ -65,9 +65,9 @@ export function LegalPage() {
           </div>
         </aside>
 
-        <article className="max-w-3xl">
+        <article className="min-w-0 max-w-3xl">
           <Eyebrow>Rechtliches</Eyebrow>
-          <h1 className="mt-3 font-display text-5xl leading-[1] font-semibold tracking-tight text-ink md:text-6xl">{isPrivacy ? 'Datenschutzerklärung' : 'Impressum'}</h1>
+          <h1 className="mt-3 font-display text-4xl leading-[1.05] font-semibold tracking-tight break-words hyphens-auto text-ink sm:text-5xl md:text-6xl">{isPrivacy ? 'Datenschutzerklärung' : 'Impressum'}</h1>
 
           <div className="mt-8 flex gap-3 rounded-2xl border border-warning/30 bg-warning-soft p-4 text-sm leading-relaxed text-ink" role="note">
             <TriangleAlert className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden />

@@ -125,7 +125,7 @@ function validateImport(raw: unknown, current: Settings): ImportResult {
   }
   if (o.budget && typeof o.budget === 'object' && !Array.isArray(o.budget)) data.budget = o.budget as DataState['budget']
   // Website-Bereiche sind optional (ältere Exporte kennen sie noch nicht)
-  for (const k of ['products', 'workshops', 'cafes', 'orders', 'bookings', 'subscribers'] as const) {
+  for (const k of ['products', 'workshops', 'cafes', 'orders', 'bookings', 'subscribers', 'messages'] as const) {
     if (Array.isArray(o[k])) (data as Record<string, unknown>)[k] = o[k]
   }
   if (o.site && typeof o.site === 'object' && !Array.isArray(o.site)) data.site = o.site as DataState['site']
@@ -671,6 +671,7 @@ function DataSection() {
       orders: s.orders,
       bookings: s.bookings,
       subscribers: s.subscribers,
+      messages: s.messages ?? [],
     }
     const payload = { ...data, _meta: { app: 'Röstbrüder Studio', version: APP_VERSION, exportedAt: new Date().toISOString() } }
     downloadFile(`roestbrueder-studio-${dayKey(new Date())}.json`, JSON.stringify(payload, null, 2))

@@ -288,6 +288,8 @@ function NumberRow({
   step: number
   onChange: (v: number) => void
 }) {
+  // Eigener Text-Zustand, damit man das Feld beim Tippen auch kurz leeren kann
+  const [text, setText] = useState<string | null>(null)
   return (
     <div className="flex items-center justify-between gap-4">
       <label htmlFor={id} className="flex items-center gap-2 text-sm font-semibold">
@@ -308,9 +310,14 @@ function NumberRow({
             id={id}
             type="number"
             inputMode="decimal"
-            value={value}
+            value={text ?? String(value)}
             step={step}
-            onChange={(e) => onChange(Number(e.target.value))}
+            onChange={(e) => {
+              setText(e.target.value)
+              const n = parseFloat(e.target.value.replace(',', '.'))
+              if (Number.isFinite(n) && n > 0) onChange(n)
+            }}
+            onBlur={() => setText(null)}
             className="tabular h-12 w-28 rounded-2xl border border-white/15 bg-white/[0.06] pr-8 pl-4 text-right font-display text-xl font-semibold text-sidebar-ink focus:border-accent focus:ring-2 focus:ring-accent/40 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           <span className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-sm text-sidebar-muted">{unit}</span>

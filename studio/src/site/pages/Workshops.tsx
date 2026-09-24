@@ -93,7 +93,7 @@ export function WorkshopsPage() {
       <HowItWorks />
 
       <section aria-label="Gutschein und Team-Events" className="pb-20 md:pb-28">
-        <Container className="grid gap-5 lg:grid-cols-2">
+        <Container className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <Reveal className="h-full">
             <div className="grain relative flex h-full flex-col overflow-hidden rounded-[2rem] bg-accent-soft p-8 md:p-10">
               <Gift className="size-8 text-accent-text" aria-hidden />
@@ -307,14 +307,14 @@ function SessionChip({ workshop: w, session: s, onClick }: { workshop: Workshop;
       )}
       aria-label={`${dateLabel(s.startsAt)}, ${timeLabel(s.startsAt)} Uhr – ${full ? 'ausgebucht' : `${left} ${left === 1 ? 'Platz' : 'Plätze'} frei`}`}
     >
-      <span className={cn('tabular text-sm font-semibold text-ink', full && 'line-through decoration-ink-3')}>
+      <span className={cn('tabular text-sm font-semibold whitespace-nowrap text-ink', full && 'line-through decoration-ink-3')}>
         {dateLabel(s.startsAt)} · {timeLabel(s.startsAt)}
       </span>
       <span className="flex items-center gap-2 sm:mt-1.5">
-        <span className="h-1 w-12 overflow-hidden rounded-full bg-surface-3" aria-hidden>
+        <span className="hidden h-1 w-12 overflow-hidden rounded-full bg-surface-3 min-[400px]:block" aria-hidden>
           <span className={cn('block h-full rounded-full', full ? 'bg-ink-3' : last ? 'bg-accent' : 'bg-success')} style={{ width: `${(left / w.capacity) * 100}%` }} />
         </span>
-        <span className={cn('text-xs font-medium', full ? 'text-ink-3' : last ? 'font-semibold text-accent-text' : 'text-ink-3')}>
+        <span className={cn('text-xs font-medium whitespace-nowrap', full ? 'text-ink-3' : last ? 'font-semibold text-accent-text' : 'text-ink-3')}>
           {full ? 'Ausgebucht' : last ? 'Nur noch 1 Platz!' : `${left} frei`}
         </span>
       </span>
@@ -429,6 +429,7 @@ function BookingModal({
       email: email.trim().toLowerCase(),
       seats: seatCount,
       gift,
+      giftNote: gift && giftNote.trim() ? giftNote.trim() : undefined,
       createdAt: new Date().toISOString(),
     }
     const res = bookWorkshop(b)

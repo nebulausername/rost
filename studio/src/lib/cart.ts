@@ -70,7 +70,10 @@ export function unitPrice(item: CartItem, products: Product[]) {
 }
 
 export function describeItem(item: CartItem, products: Product[]) {
-  if (item.kind === 'voucher') return { title: `Gutschein ${item.value} €`, detail: 'per E-Mail, 3 Jahre gültig' }
+  if (item.kind === 'voucher') {
+    const value = item.value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(item.value) ? 0 : 2 })
+    return { title: `Gutschein ${value}`, detail: 'per E-Mail, 3 Jahre gültig' }
+  }
   const p = item.productId ? products.find((x) => x.id === item.productId) : null
   if (item.kind === 'abo') {
     return {
