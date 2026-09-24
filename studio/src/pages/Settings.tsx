@@ -196,20 +196,20 @@ function NumberField({
   label: string
   className?: string
 }) {
-  const [draft, setDraft] = useState(String(value))
+  const [draft, setDraft] = useState(fmt.num(value))
   const [synced, setSynced] = useState(value)
   if (value !== synced) {
     setSynced(value)
-    setDraft(String(value))
+    setDraft(fmt.num(value))
   }
   const commit = () => {
     const n = Number(draft.replace(/\s/g, '').replace(/\./g, '').replace(',', '.'))
     if (!draft.trim() || !Number.isFinite(n)) {
-      setDraft(String(value))
+      setDraft(fmt.num(value))
       return
     }
     const v = clamp(Math.round(n), min, max)
-    setDraft(String(v))
+    setDraft(fmt.num(v))
     if (v !== value) onCommit(v)
   }
   return (
@@ -223,7 +223,7 @@ function NumberField({
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === 'Enter') e.currentTarget.blur()
-          if (e.key === 'Escape') setDraft(String(value))
+          if (e.key === 'Escape') setDraft(fmt.num(value))
         }}
         className={cn('text-right tabular', suffix && 'pr-8')}
       />
@@ -357,9 +357,9 @@ function BudgetSection() {
           </>
         }
       >
-        <div className="sm:w-44">
+        <div className="sm:w-48">
           <NumberField id="budget-cap" value={cap} onCommit={(v) => update({ monthlyBudgetCap: v })} suffix="€" label="Monatliche Obergrenze in Euro" max={1_000_000} />
-          <p className="mt-1.5 text-right text-[11px] text-ink-3 tabular">
+          <p className="mt-1.5 text-[11px] whitespace-nowrap text-ink-3 tabular sm:text-right">
             ≈ {fmt.eur((cap * 12) / 52)} / Woche · {fmt.eur(cap * 12)} / Jahr
           </p>
         </div>
@@ -406,8 +406,11 @@ function ChannelsSection() {
         if (!meta) return null
         const last = a.history[a.history.length - 1]
         return (
-          <div key={a.platform} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_128px_auto] md:items-end md:gap-4">
-            <div className="flex min-w-0 items-center gap-3 md:self-center">
+          <div
+            key={a.platform}
+            className="grid grid-cols-2 items-end gap-x-3 gap-y-3 px-5 py-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_128px_auto] md:gap-x-4"
+          >
+            <div className="order-1 flex min-w-0 items-center gap-3 self-center">
               <PlatformDot platform={a.platform} size={32} />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-ink">{meta.label}</p>
@@ -416,7 +419,7 @@ function ChannelsSection() {
                 </p>
               </div>
             </div>
-            <Field label="Handle / Name" htmlFor={`handle-${a.platform}`}>
+            <Field label="Handle / Name" htmlFor={`handle-${a.platform}`} className="order-3 min-w-0 md:order-2">
               <Input
                 id={`handle-${a.platform}`}
                 value={a.handle}
@@ -424,7 +427,11 @@ function ChannelsSection() {
                 placeholder="@roestbrueder"
               />
             </Field>
-            <Field label={a.platform === 'newsletter' ? 'Abonnent:innen' : 'Follower'} htmlFor={`followers-${a.platform}`}>
+            <Field
+              label={a.platform === 'newsletter' ? 'Abonnent:innen' : 'Follower'}
+              htmlFor={`followers-${a.platform}`}
+              className="order-4 min-w-0 md:order-3"
+            >
               <NumberField
                 id={`followers-${a.platform}`}
                 value={a.followers}
@@ -432,7 +439,7 @@ function ChannelsSection() {
                 label={`Follower ${meta.label}`}
               />
             </Field>
-            <div className="flex h-9 items-center gap-2.5">
+            <div className="order-2 flex h-9 items-center justify-end gap-2.5 self-center md:order-4 md:self-end">
               <Toggle checked={a.connected} onChange={(v) => updateAccount({ ...a, connected: v })} label={`${meta.label} verbunden`} />
               <span className={cn('text-xs', a.connected ? 'font-medium text-ink' : 'text-ink-3')}>Verbunden</span>
             </div>
@@ -699,7 +706,9 @@ function DataSection() {
         <p className="mt-2 text-xs leading-relaxed text-ink-3">
           {bytes == null
             ? 'Der Browser erlaubt keinen Zugriff auf den lokalen Speicher (z. B. privates Fenster) – Änderungen gehen beim Schließen verloren.'
-            : `Anderer Browser oder privates Fenster = andere Daten. Bilder belegen am meisten Platz${images ? ` (aktuell ${images} ${images === 1 ? 'Bild' : 'Bilder'})` : ''} – sie werden beim Hochladen komprimiert.`}
+            : bytes === 0
+              ? 'Noch nichts gespeichert – die Beispieldaten landen mit deiner ersten Änderung im Speicher.'
+              : `Anderer Browser oder privates Fenster = andere Daten. Bilder belegen am meisten Platz${images ? ` (aktuell ${images} ${images === 1 ? 'Bild' : 'Bilder'})` : ''} – sie werden beim Hochladen komprimiert.`}
         </p>
         {share > 0.7 ? (
           <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-warning">

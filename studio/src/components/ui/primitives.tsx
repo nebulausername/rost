@@ -91,15 +91,15 @@ export function CardHeader({
   className?: string
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-3 px-5 pt-4 pb-3', className)}>
-      <div className="flex min-w-0 items-start gap-2.5">
+    <div className={cn('flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-5 pt-4 pb-3', className)}>
+      <div className="flex min-w-[min(12rem,100%)] flex-1 items-start gap-2.5">
         {icon ? <div className="mt-0.5 text-ink-3">{icon}</div> : null}
         <div className="min-w-0">
           <h2 className="truncate text-[15px] font-semibold text-ink">{title}</h2>
           {subtitle ? <p className="mt-0.5 text-xs text-ink-3">{subtitle}</p> : null}
         </div>
       </div>
-      {action ? <div className="flex shrink-0 items-center gap-1.5">{action}</div> : null}
+      {action ? <div className="flex max-w-full shrink-0 flex-wrap items-center gap-1.5">{action}</div> : null}
     </div>
   )
 }
@@ -294,6 +294,7 @@ export function Segmented<T extends string>({
         return (
           <button
             key={o.value}
+            type="button"
             role="radio"
             aria-checked={active}
             onClick={() => onChange(o.value)}
@@ -315,6 +316,7 @@ export function Segmented<T extends string>({
 export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
+      type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}

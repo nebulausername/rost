@@ -106,6 +106,7 @@ export function StatTile({
   deltaLabel,
   trend,
   trendLabels,
+  trendFormat,
   icon,
   footnote,
   className,
@@ -116,6 +117,8 @@ export function StatTile({
   deltaLabel?: string
   trend?: number[]
   trendLabels?: string[]
+  /** Formatierung der Sparkline-Werte im Hover (Standard: kompakte Zahl) */
+  trendFormat?: (v: number) => string
   icon?: ReactNode
   footnote?: ReactNode
   className?: string
@@ -128,7 +131,7 @@ export function StatTile({
       </div>
       <div className="flex items-end justify-between gap-3">
         <p className="min-w-0 truncate text-2xl leading-none font-semibold tracking-tight text-ink tabular">{value}</p>
-        {trend && trend.length > 1 ? <Sparkline values={trend} labels={trendLabels} className="w-20 shrink-0" height={30} /> : null}
+        {trend && trend.length > 1 ? <Sparkline values={trend} labels={trendLabels} format={trendFormat} className="w-20 shrink-0" height={30} /> : null}
       </div>
       {delta != null ? (
         <p className="-mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-ink-3">
@@ -149,6 +152,7 @@ export function Meter({
   tone = 'accent',
   height = 8,
   label,
+  markerLabel = 'Soll bis heute',
 }: {
   value: number
   max: number
@@ -157,6 +161,7 @@ export function Meter({
   tone?: 'accent' | 'success' | 'warning' | 'danger'
   height?: number
   label?: string
+  markerLabel?: string
 }) {
   const pct = max ? Math.min(100, (value / max) * 100) : 0
   const mk = marker != null && max ? Math.min(100, (marker / max) * 100) : null
@@ -173,7 +178,7 @@ export function Meter({
     >
       <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${pct}%`, background: fills[tone] }} />
       {mk != null ? (
-        <div className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-ink/70" style={{ left: `calc(${mk}% - 1px)` }} title="Soll bis heute" />
+        <div className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-ink/70" style={{ left: `calc(${mk}% - 1px)` }} title={markerLabel} />
       ) : null}
     </div>
   )

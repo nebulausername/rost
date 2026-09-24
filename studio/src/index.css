@@ -152,6 +152,14 @@
     opacity: 0;
   }
 }
+@keyframes loading {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
 @keyframes pop-in {
   from {
     transform: translateY(6px) scale(0.98);

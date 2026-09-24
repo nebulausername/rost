@@ -1,6 +1,6 @@
 import { Megaphone, Menu, Monitor, Moon, Plus, Search, Sun, X } from 'lucide-react'
 import { useEffect } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { NavLink, Outlet, useLocation, useNavigate, useNavigation } from 'react-router'
 import { useStore, useUi } from '../../lib/store'
 import { cn } from '../../lib/utils'
 import { CampaignEditor } from '../../features/CampaignEditor'
@@ -160,7 +160,7 @@ function useGlobalShortcuts() {
       }
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return
       const s = useUi.getState()
-      if (s.postEditor.open || s.campaignEditor.open || s.paletteOpen) return
+      if (s.postEditor.open || s.campaignEditor.open || s.paletteOpen || document.querySelector('[role="dialog"]')) return
       const key = e.key.toLowerCase()
       if (Date.now() - gPressed < 900 && routes[key]) {
         e.preventDefault()
@@ -198,6 +198,7 @@ export function AppShell() {
   const openCampaign = useUi((s) => s.openCampaign)
   const demo = useStore((s) => s.settings.demoData)
   const location = useLocation()
+  const navigation = useNavigation()
   const current = NAV.find((n) => (n.to === '/' ? location.pathname === '/' : location.pathname.startsWith(n.to)))
 
   useEffect(() => {
@@ -226,6 +227,12 @@ export function AppShell() {
               <X className="size-5" />
             </button>
           </aside>
+        </div>
+      ) : null}
+
+      {navigation.state === 'loading' ? (
+        <div className="fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden bg-accent-soft" role="progressbar" aria-label="Seite wird geladen">
+          <div className="h-full w-1/3 animate-[loading_900ms_ease-in-out_infinite] bg-accent" />
         </div>
       ) : null}
 

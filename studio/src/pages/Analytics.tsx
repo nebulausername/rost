@@ -258,6 +258,22 @@ export function AnalyticsPage() {
   )
 }
 
+/** Karten-Kopf, der Umschalter auf schmalen Screens umbricht statt den Titel zu kürzen */
+function WrapHeader({ icon, title, subtitle, action }: { icon: ReactNode; title: string; subtitle?: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 px-5 pt-4 pb-3">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <div className="mt-0.5 text-ink-3">{icon}</div>
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
+          {subtitle ? <p className="mt-0.5 text-xs text-ink-3">{subtitle}</p> : null}
+        </div>
+      </div>
+      {action}
+    </div>
+  )
+}
+
 function NoPostData({ compact }: { compact?: boolean }) {
   return (
     <EmptyState
@@ -343,7 +359,7 @@ function FollowerCard({
 
   return (
     <Card className={cn('min-w-0', className)}>
-      <CardHeader
+      <WrapHeader
         icon={<Users className="size-4" />}
         title="Follower-Wachstum"
         subtitle={mode === 'abs' ? 'Wöchentliche Stände je Kanal' : 'Indexiert: Start des Zeitraums = 100 – so wird jeder Kanal vergleichbar'}
@@ -575,7 +591,7 @@ function HeatmapCard({ posts, className }: { posts: Post[]; className?: string }
 
   return (
     <Card className={cn('min-w-0', className)}>
-      <CardHeader
+      <WrapHeader
         icon={<Clock3 className="size-4" />}
         title="Beste Posting-Zeiten"
         subtitle={`Ø ${metricLabel} nach Wochentag & Uhrzeit`}
@@ -594,7 +610,7 @@ function HeatmapCard({ posts, className }: { posts: Post[]; className?: string }
       />
       <div className="px-5 pb-5">
         {heat.filled.length ? (
-          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_200px] 2xl:grid-cols-[minmax(0,1fr)_240px]">
             <div className="min-w-0">
               <div
                 className="grid grid-cols-[2.25rem_repeat(6,minmax(0,1fr))] gap-1"

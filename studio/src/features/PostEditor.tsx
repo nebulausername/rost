@@ -442,7 +442,15 @@ function EditorBody({
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => onChange({ hashtags: Array.from(new Set([...draft.hashtags, ...s.tags])) })}
+                    onClick={() => {
+                      const fresh = s.tags.filter((t) => !allTags.includes(t))
+                      const room = tagLimit != null ? Math.max(0, tagLimit - allTags.length) : fresh.length
+                      const take = fresh.slice(0, room)
+                      onChange({ hashtags: [...draft.hashtags, ...take] })
+                      if (take.length < fresh.length) {
+                        toast({ title: `${take.length} von ${fresh.length} Hashtags übernommen`, description: `${tagLimitPlatform} erlaubt max. ${tagLimit} – wähle die stärksten.` })
+                      }
+                    }}
                     className="inline-flex h-6 items-center gap-1 rounded-md border border-dashed border-line-strong px-2 text-[11px] text-ink-2 hover:border-accent hover:text-accent-text"
                   >
                     <Plus className="size-3" /> {s.name}

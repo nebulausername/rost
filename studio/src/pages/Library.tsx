@@ -192,8 +192,9 @@ export function LibraryPage() {
 // ---------------------------------------------------------------------------
 
 function tagCountState(n: number): { tone: 'success' | 'warning' | 'muted'; label: string } {
-  if (n > 8) return { tone: 'warning', label: 'eher ausdünnen' }
-  if (n >= 3) return { tone: 'success', label: 'ideal' }
+  // Sets sind Pools: pro Post werden höchstens 5 davon genutzt
+  if (n > 12) return { tone: 'warning', label: 'eher ausdünnen' }
+  if (n >= 5) return { tone: 'success', label: 'guter Pool' }
   return { tone: 'muted', label: 'ausbaufähig' }
 }
 
@@ -214,10 +215,10 @@ function HashtagTab({ onNew, onEdit }: { onNew: () => void; onEdit: (s: HashtagS
           <Info className="size-4" aria-hidden />
         </span>
         <div className="text-xs leading-relaxed text-ink-2">
-          <p className="font-semibold text-ink">Weniger ist mehr: 3–8 relevante Hashtags pro Instagram-Post.</p>
+          <p className="font-semibold text-ink">Sets sind Pools – pro Instagram-Post höchstens 5 Hashtags (aktuelles Limit, Stand prüfen).</p>
           <p className="mt-0.5">
-            Mische lokal (#weimar), Nische (#specialtycoffee) und Thema (#pourover). Hashtag-Wände wirken nach Spam – und Instagram
-            sortiert heute vor allem über Bild, Text & Keywords. Auf TikTok 3–5, bei Google & Newsletter gar keine.
+            Mische lokal (#weimar), Nische (#specialtycoffee) und Thema (#pourover). Wähle aus dem Pool die passendsten aus, statt alles zu
+            übernehmen – Instagram sortiert heute vor allem über Bild, Text & Keywords. Auf TikTok 3–5, bei Google & Newsletter gar keine.
           </p>
         </div>
       </div>
