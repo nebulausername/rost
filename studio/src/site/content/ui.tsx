@@ -64,19 +64,6 @@ export function FaqList({ items, className }: { items: { q: string; a: ReactNode
   )
 }
 
-/** Kleine Kennzahl mit Label */
-export function Fact({ label, value, className, icon }: { label: ReactNode; value: ReactNode; className?: string; icon?: ReactNode }) {
-  return (
-    <div className={cn('rounded-2xl border border-line bg-surface px-4 py-3', className)}>
-      <dt className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] text-ink-3 uppercase">
-        {icon}
-        {label}
-      </dt>
-      <dd className="tabular mt-1 text-lg font-semibold text-ink">{value}</dd>
-    </div>
-  )
-}
-
 /** Dezenter Hinweis „Beispielwert / schematisch“ */
 export function ExampleNote({ children, className }: { children: ReactNode; className?: string }) {
   return <p className={cn('text-xs leading-relaxed text-ink-3', className)}>{children}</p>

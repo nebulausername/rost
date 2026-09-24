@@ -135,12 +135,3 @@ export function Steam({ className }: { className?: string }) {
     </svg>
   )
 }
-
-/** Handgezeichnete Unterstreichung für Headlines */
-export function Squiggle({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 200 14" preserveAspectRatio="none" className={cn('h-3 w-full', className)} aria-hidden>
-      <path d="M2 9c22-6 40 4 62-1s40-6 62 0 44 3 72-3" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
-    </svg>
-  )
-}

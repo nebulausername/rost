@@ -74,7 +74,7 @@ function CafeSection({ cafe: c, flip }: { cafe: CafeLocation; flip: boolean }) {
       <Container>
         <div className={cn('grid items-center gap-10 lg:grid-cols-2 lg:gap-16', flip && 'lg:[&>*:first-child]:order-2')}>
           <Reveal>
-            <div className="grain relative aspect-[4/3] overflow-hidden rounded-[2.5rem] bg-sidebar text-sidebar-ink">
+            <div className="grain relative aspect-square overflow-hidden rounded-[2.5rem] bg-sidebar text-sidebar-ink sm:aspect-[4/3]">
               <div aria-hidden className="absolute inset-0 bg-[radial-gradient(70%_70%_at_30%_20%,rgb(196_112_47/0.35),transparent_70%)]" />
               <div className="absolute inset-x-6 top-12 bottom-24 flex items-center justify-center md:bottom-28">{c.id === 'roesterei' ? <RoasterArt /> : <BarArt />}</div>
               <div className="absolute top-5 left-5">
