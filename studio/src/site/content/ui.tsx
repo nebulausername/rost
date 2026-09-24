@@ -1,35 +1,14 @@
 import { ChevronDown } from 'lucide-react'
-import { useRef, type CSSProperties, type ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { cn } from '../../lib/utils'
 import { Container, Eyebrow } from '../components'
-import { useInView } from './hooks'
 
 // Gemeinsame Bausteine der Erlebnis-Seiten (Geschmacksfinder, Abo, Workshops, Cafés, Herkunft, Anleitungen, Über uns).
 
-/** Blendet Inhalte beim Scrollen weich ein */
-export function Reveal({
-  children,
-  className,
-  delay = 0,
-  style,
-}: {
-  children: ReactNode
-  className?: string
-  delay?: number
-  style?: CSSProperties
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const seen = useInView(ref)
+/** Blendet Inhalte beim Scrollen weich ein (CSS scroll-driven animation der Shell; ohne Support einfach sichtbar) */
+export function Reveal({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   return (
-    <div
-      ref={ref}
-      className={cn(
-        'transition-[opacity,translate] duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]',
-        seen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0',
-        className,
-      )}
-      style={{ transitionDelay: seen ? `${delay}ms` : undefined, ...style }}
-    >
+    <div className={cn('rb-reveal', className)} style={style}>
       {children}
     </div>
   )
@@ -54,13 +33,13 @@ export function PageHero({
   return (
     <section className={cn('relative overflow-hidden', className)}>
       <Container className={cn('grid items-center gap-12 pt-14 pb-16 md:pt-20 md:pb-24', aside && 'lg:grid-cols-[1.15fr_0.85fr]')}>
-        <div className="animate-pop-in">
+        <div className="min-w-0 animate-pop-in">
           {eyebrow ? <Eyebrow className="mb-5">{eyebrow}</Eyebrow> : null}
-          <h1 className="font-display text-[2.75rem] leading-[0.98] font-semibold tracking-tight text-ink sm:text-6xl lg:text-7xl">{title}</h1>
+          <h1 className="font-display text-[2.6rem] leading-[0.98] font-semibold tracking-tight break-words text-ink sm:text-6xl lg:text-7xl">{title}</h1>
           {text ? <div className="mt-6 max-w-xl text-lg leading-relaxed text-ink-2 md:text-xl">{text}</div> : null}
           {children ? <div className="mt-8">{children}</div> : null}
         </div>
-        {aside ? <div className="relative animate-fade-in">{aside}</div> : null}
+        {aside ? <div className="relative min-w-0 animate-fade-in">{aside}</div> : null}
       </Container>
     </section>
   )

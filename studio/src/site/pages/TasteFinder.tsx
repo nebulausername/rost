@@ -52,6 +52,8 @@ export function TasteFinderPage() {
       if (qIndex === QUESTIONS.length - 1) {
         setPicked(null)
         setDir(1)
+        // Zurück aus dem Ergebnis landet auf dem Intro („Weiter geht’s“) – die Antworten bleiben vorausgewählt
+        setStep(INTRO)
         setParams({ a: next.slice(0, QUESTIONS.length).join('-') })
         requestAnimationFrame(() => window.scrollTo({ top: 0 }))
       } else go(qIndex + 1, 1)
@@ -170,7 +172,7 @@ function Intro({ onStart, hasDraft }: { onStart: () => void; hasDraft: boolean }
           return (
             <div
               key={p.id}
-              className="relative -mx-4 w-[36%] max-w-[190px] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:z-10 hover:-translate-y-4 sm:-mx-5"
+              className="relative -mx-3 w-[30%] max-w-[190px] sm:w-[36%] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:z-10 hover:-translate-y-4 sm:-mx-5"
               style={{ transform: `translateY(${Math.abs(off) * 18}px) rotate(${off * 9}deg)`, zIndex: 10 - Math.round(Math.abs(off) * 2) }}
             >
               <CoffeeBag product={p} />
@@ -546,12 +548,12 @@ function RunnerUp({ match, onAdd }: { match: Match; onAdd: () => void }) {
         </h3>
         <p className="text-sm text-ink-3">{p.subtitle}</p>
         <NoteChips notes={p.notes} className="mt-3" />
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <span className="tabular font-semibold text-ink">{price(p.price)}</span>
           <button
             type="button"
             onClick={onAdd}
-            className="relative z-10 inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-sm font-semibold text-ink transition-colors hover:bg-accent-solid hover:text-on-accent"
+            className="relative z-10 inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-2 whitespace-nowrap px-3.5 text-sm font-semibold text-ink transition-colors hover:bg-accent-solid hover:text-on-accent"
           >
             <ShoppingBag className="size-4" aria-hidden />
             <span>
@@ -607,7 +609,7 @@ const DARK = '#2b1b12'
 
 function Art({ children }: { children: ReactNode }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-14 sm:size-16" aria-hidden>
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-16 md:size-20" aria-hidden>
       {children}
     </svg>
   )
@@ -632,7 +634,7 @@ function wave(amp: number, freq: number) {
 }
 
 function OptionArt({ id }: { id: string }) {
-  if (BREW_ICON[id]) return <BrewIcon name={BREW_ICON[id]} className="size-14 sm:size-16" />
+  if (BREW_ICON[id]) return <BrewIcon name={BREW_ICON[id]} className="size-16 md:size-20" />
   switch (id) {
     case 'milch':
     case 'beides':

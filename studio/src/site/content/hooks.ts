@@ -1,18 +1,8 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { useLocation } from 'react-router'
 
-const TITLE_SUFFIX = 'Röstbrüder – Kaffeerösterei & Cafés in Weimar'
-
-/** Setzt den Dokumenttitel, z. B. „Kaffee-Abo · Röstbrüder – Kaffeerösterei & Cafés in Weimar“ */
-export function useDocumentTitle(title: string) {
-  useEffect(() => {
-    const prev = document.title
-    document.title = title ? `${title} · ${TITLE_SUFFIX}` : TITLE_SUFFIX
-    return () => {
-      document.title = prev
-    }
-  }, [title])
-}
+/** Seitentitel „<Seite> · Röstbrüder – Kaffeerösterei & Cafés in Weimar“ – nutzt den Hook der Shell */
+export { usePageTitle as useDocumentTitle } from '../shell/hooks'
 
 /** true, sobald das Element (einmalig) in den sichtbaren Bereich kommt */
 export function useInView<T extends Element>(ref: RefObject<T | null>, rootMargin = '0px 0px -10% 0px') {

@@ -152,7 +152,7 @@ export function Header() {
               to="/geschmacksfinder"
               className={({ isActive }) =>
                 cn(
-                  'hidden h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors xl:inline-flex',
+                  'hidden h-10 min-w-10 items-center justify-center gap-2 rounded-full border text-sm font-semibold transition-colors lg:inline-flex xl:px-4',
                   overHero
                     ? 'border-white/25 text-white hover:bg-white/10'
                     : isActive
@@ -162,7 +162,7 @@ export function Header() {
               }
             >
               <Sparkles className="size-4" aria-hidden />
-              Geschmacksfinder
+              <span className="sr-only xl:not-sr-only">Geschmacksfinder</span>
             </NavLink>
             <button
               type="button"
@@ -177,7 +177,10 @@ export function Header() {
               {count > 0 ? (
                 <span
                   key={count}
-                  className="tabular absolute top-0.5 right-0 inline-flex h-5 min-w-5 animate-pop-in items-center justify-center rounded-full bg-accent-solid px-1 text-[11px] font-bold text-on-accent ring-2 ring-canvas"
+                  className={cn(
+                    'tabular absolute top-0.5 right-0 inline-flex h-5 min-w-5 animate-pop-in items-center justify-center rounded-full bg-accent-solid px-1 text-[11px] font-bold text-on-accent ring-2',
+                    overHero ? 'ring-sidebar' : 'ring-canvas',
+                  )}
                 >
                   {count}
                 </span>
@@ -248,14 +251,14 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                   onClick={onClose}
                   className={({ isActive }) =>
                     cn(
-                      'group flex items-baseline gap-4 border-b border-white/10 py-3 font-display text-[34px] leading-tight font-semibold tracking-tight transition-colors sm:text-5xl',
+                      'group flex items-baseline gap-4 border-b border-white/10 py-3 font-display text-[32px] leading-tight font-semibold tracking-tight transition-colors sm:text-5xl',
                       isActive ? 'text-accent' : 'text-sidebar-ink hover:text-white',
                     )
                   }
                 >
-                  <span className="tabular w-6 font-sans text-xs font-semibold tracking-widest text-sidebar-muted">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="tabular w-6 shrink-0 font-sans text-xs font-semibold tracking-widest text-sidebar-muted">{String(i + 1).padStart(2, '0')}</span>
                   <span className="flex-1">{n.label}</span>
-                  <ArrowRight className="size-5 -translate-x-2 self-center opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" aria-hidden />
+                  <ArrowRight className="hidden size-5 shrink-0 -translate-x-2 self-center opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 sm:block" aria-hidden />
                 </NavLink>
               </li>
             ))}

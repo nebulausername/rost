@@ -60,6 +60,34 @@ export function AddToCartButton({
   )
 }
 
+/** Runder Schnell-Kauf-Button (Tüte + Plus) */
+export function IconAddButton({ onAdd, disabled, label }: { onAdd: () => void; disabled?: boolean; label: string }) {
+  const [added, flash] = useAddedFeedback()
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={label}
+      title={disabled ? 'Ausverkauft' : 'In den Warenkorb'}
+      onClick={() => {
+        onAdd()
+        flash()
+      }}
+      className={cn(
+        'relative z-10 inline-flex size-12 shrink-0 items-center justify-center rounded-full transition-[background-color,color,transform,box-shadow] duration-200 active:scale-95 disabled:pointer-events-none',
+        disabled ? 'bg-surface-2 text-ink-3' : added ? 'bg-success text-white' : 'bg-ink text-canvas hover:scale-105 hover:bg-accent-solid hover:text-on-accent hover:shadow-[0_8px_24px_-8px_rgb(165_90_34/0.6)]',
+      )}
+    >
+      {added ? <Check className="size-5" aria-hidden /> : <ShoppingBag className="size-5" aria-hidden />}
+      {!added && !disabled ? (
+        <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-accent-solid text-on-accent ring-2 ring-canvas" aria-hidden>
+          <Plus className="size-3" strokeWidth={3} />
+        </span>
+      ) : null}
+    </button>
+  )
+}
+
 /** Produktkarte mit Tüte auf getönter Bühne, Noten, Röstgrad, Preis & Schnell-Kauf */
 export function ProductCard({
   product,
@@ -67,6 +95,7 @@ export function ProductCard({
   pricePrefix,
   headingLevel = 'h3',
   priority,
+  addVariant = 'full',
 }: {
   product: Product
   className?: string
@@ -75,6 +104,8 @@ export function ProductCard({
   headingLevel?: 'h2' | 'h3'
   /** große Variante (Startseite) */
   priority?: boolean
+  /** „icon“ = runder Warenkorb-Button für enge Raster */
+  addVariant?: 'full' | 'icon'
 }) {
   const add = useCart((s) => s.add)
   const Heading = headingLevel
@@ -126,15 +157,20 @@ export function ProductCard({
         <NoteChips notes={product.notes} className="mt-3" />
         <div className="mt-auto flex items-center justify-between gap-3 pt-5">
           {isGift ? <span className="text-xs text-ink-3">mit Brühkarte</span> : <RoastMeter roast={product.roast} />}
-          <AddToCartButton
-            compact
-            disabled={!product.available}
-            label={product.available ? `${product.name} (250 g, ganze Bohne) in den Warenkorb` : `${product.name} ist ausverkauft`}
-            onAdd={() => add({ kind: 'product', productId: product.id, size: '250', grind: 'bohne', qty: 1 })}
-          >
-            <span className="hidden sm:inline">In den Warenkorb</span>
-            <span className="sm:hidden">Hinzufügen</span>
-          </AddToCartButton>
+          {addVariant === 'icon' ? (
+            <IconAddButton
+              disabled={!product.available}
+              label={product.available ? `${product.name} (250 g, ganze Bohne) in den Warenkorb` : `${product.name} ist ausverkauft`}
+              onAdd={() => add({ kind: 'product', productId: product.id, size: '250', grind: 'bohne', qty: 1 })}
+            />
+          ) : (
+            <AddToCartButton
+              compact
+              disabled={!product.available}
+              label={product.available ? `${product.name} (250 g, ganze Bohne) in den Warenkorb` : `${product.name} ist ausverkauft`}
+              onAdd={() => add({ kind: 'product', productId: product.id, size: '250', grind: 'bohne', qty: 1 })}
+            />
+          )}
         </div>
       </div>
     </article>

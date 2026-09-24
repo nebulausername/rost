@@ -170,7 +170,7 @@ export function RoastMeter({ roast, className }: { roast: number; className?: st
           <span key={i} className={cn('h-1.5 w-5 rounded-full', i <= roast ? 'bg-roast' : 'bg-surface-3')} />
         ))}
       </div>
-      <span className="text-xs text-ink-3">{ROAST_LABELS[roast]}</span>
+      <span className="text-xs whitespace-nowrap text-ink-3">{ROAST_LABELS[roast]}</span>
     </div>
   )
 }

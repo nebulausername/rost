@@ -41,13 +41,52 @@ const SITE_CSS = `
 @keyframes rb-steam { 0% { stroke-dashoffset: 70; opacity: 0; } 35% { opacity: 0.85; } 100% { stroke-dashoffset: -70; opacity: 0; } }
 @keyframes rb-progress { from { transform: translateX(-100%); } to { transform: translateX(320%); } }
 @keyframes rb-spin-slow { to { transform: rotate(360deg); } }
+@keyframes rb-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .rb-marquee:hover .rb-marquee-track, .rb-marquee:focus-within .rb-marquee-track { animation-play-state: paused; }
 .rb-no-scrollbar { scrollbar-width: none; }
 .rb-no-scrollbar::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .rb-loop { animation: none !important; }
+  /* globale Regel kürzt nur die Dauer – Endlos-Loops würden dann flackern */
+  .rb-loop, .animate-ping, .animate-spin, .animate-pulse { animation: none !important; }
+}
+/* Einblenden beim Scrollen – nur wenn JS läuft (html.rb-js), sonst ist alles sofort sichtbar */
+@media (prefers-reduced-motion: no-preference) {
+  html.rb-js .rb-reveal { transition: opacity 700ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  html.rb-js .rb-reveal:not([data-shown]) { opacity: 0; transform: translateY(18px); }
 }
 `
+
+/** Blendet .rb-reveal-Elemente ein, sobald sie sichtbar werden (auch nach Seitenwechseln) */
+function useRevealOnScroll() {
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return
+    const root = document.documentElement
+    root.classList.add('rb-js')
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          const el = e.target as HTMLElement
+          // leichter Versatz für Geschwister in Listen
+          const idx = el.parentElement ? Array.from(el.parentElement.children).indexOf(el) : 0
+          el.style.transitionDelay = `${Math.min(idx, 5) * 70}ms`
+          el.setAttribute('data-shown', '')
+          io.unobserve(el)
+        }
+      },
+      { rootMargin: '0px 0px -6% 0px', threshold: 0.01 },
+    )
+    const scan = () => document.querySelectorAll('.rb-reveal:not([data-shown])').forEach((el) => io.observe(el))
+    scan()
+    const mo = new MutationObserver(scan)
+    mo.observe(document.body, { childList: true, subtree: true })
+    return () => {
+      io.disconnect()
+      mo.disconnect()
+      root.classList.remove('rb-js')
+    }
+  }, [])
+}
 
 function useSiteThemeSync() {
   const theme = useStore((s) => s.settings.theme)
@@ -162,6 +201,7 @@ function RouteProgress() {
 
 export function SiteShell() {
   useSiteThemeSync()
+  useRevealOnScroll()
   useScrollManagement()
   const { pathname, search } = useLocation()
 

@@ -151,7 +151,7 @@ export function Footer() {
   const cafes = useStore((s) => s.cafes)
   const year = new Date().getFullYear()
   return (
-    <footer className="relative mt-8 overflow-hidden border-t border-line bg-surface-2/50 pt-16 md:pt-24" aria-labelledby="footer-title">
+    <footer className="relative overflow-hidden border-t border-line bg-surface-2/50 pt-16 md:pt-24" aria-labelledby="footer-title">
       <h2 id="footer-title" className="sr-only">
         Fußbereich
       </h2>

@@ -78,6 +78,7 @@ export function describeItem(item: CartItem, products: Product[]) {
       detail: `${item.amount} g alle ${item.rhythmWeeks} Wochen · ${GRINDS[item.grind]}`,
     }
   }
+  if (p?.kind === 'gift') return { title: p.name, detail: `${p.subtitle} · ${GRINDS[item.grind]}` }
   return { title: p?.name ?? 'Kaffee', detail: `${item.size === '1000' ? '1 kg' : '250 g'} · ${GRINDS[item.grind]}` }
 }
 

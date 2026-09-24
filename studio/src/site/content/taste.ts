@@ -214,9 +214,13 @@ export function reasonsFor(p: Product, a: Answers, brewFit: boolean): string[] {
   const out: { text: string; w: number }[] = []
 
   const brewText: Record<BrewAnswer, string> = {
-    espresso: `Gemacht für den Siebträger: ${p.name} bringt Druck und Süße in den Espresso.`,
+    espresso:
+      s.body >= 4 ? `Gemacht für den Siebträger: ${p.name} bringt Druck, Crema und Süße in die Tasse.` : `Im Siebträger rund und süß – ein Espresso, der auch pur Spaß macht.`,
     filter: `Im Handfilter oder in der AeroPress zeigt sich ${p.name} von der klarsten Seite.`,
-    french: `In der French Press bekommt ${p.name} genau den vollen, runden Körper, den er verdient.`,
+    french:
+      s.body >= 3
+        ? `In der French Press bekommt ${p.name} genau den vollen, runden Körper, den er verdient.`
+        : `In der French Press zeigt sich ${p.name} saftig und klar – mit etwas mehr Körper als im Filter.`,
     moka: `Passt zur Mokkakanne – rund statt bitter, wenn du sie nicht zu heiß werden lässt.`,
     vollautomat: `Unkompliziert im Vollautomaten – wir schicken ihn dir als ganze Bohne.`,
   }
