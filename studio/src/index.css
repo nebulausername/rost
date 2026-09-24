@@ -1,0 +1,232 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/fraunces';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Röstbrüder Studio – Design-Tokens
+ * Farben leben als CSS-Variablen, damit Light/Dark an genau einer Stelle wechseln.
+ * Tailwind liest sie über @theme inline (bg-canvas, text-ink, border-line …).
+ */
+:root {
+  color-scheme: light;
+  --canvas: #faf6f1; /* Milchschaum */
+  --surface: #ffffff;
+  --surface-2: #f4ede4;
+  --surface-3: #ebe1d5;
+  --line: #e6dbce;
+  --line-strong: #d4c4b2;
+  --ink: #1c130e; /* Espresso */
+  --ink-2: #57463a;
+  --ink-3: #75604f;
+  --accent: #c4702f; /* Kupfer */
+  --accent-hover: #ad5f22;
+  --accent-soft: #f7e8da;
+  --accent-text: #93501d;
+  --crema: #e9d8c4;
+  --roast: #5b3a29;
+  --success: #4f7049;
+  --success-soft: #e5eee2;
+  --warning: #b07a12;
+  --warning-soft: #f8edd3;
+  --danger: #b3261e;
+  --danger-soft: #f8e1de;
+  --sidebar: #1c130e;
+  --sidebar-ink: #eadccd;
+  --sidebar-muted: #a8927f;
+  --sidebar-active: #2e2119;
+  --ring: #c4702f;
+  --shadow-color: 40 22 10;
+
+  /* Diagramm-Serien (validiert: farbenblind-sicher, feste Reihenfolge) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --grid: #ece3d8;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: #15100c;
+  --surface: #1f1712;
+  --surface-2: #2a1f18;
+  --surface-3: #35281f;
+  --line: #3a2c22;
+  --line-strong: #4d3b2e;
+  --ink: #f3eae0;
+  --ink-2: #cdbcac;
+  --ink-3: #a38f7e;
+  --accent: #d9844a;
+  --accent-hover: #e6955c;
+  --accent-soft: #3a2618;
+  --accent-text: #eba271;
+  --crema: #4a3a2d;
+  --roast: #c9a78e;
+  --success: #86a980;
+  --success-soft: #243024;
+  --warning: #e0ac4a;
+  --warning-soft: #3a2d14;
+  --danger: #ec7a72;
+  --danger-soft: #3d1c19;
+  --sidebar: #100b08;
+  --sidebar-ink: #eadccd;
+  --sidebar-muted: #9a8573;
+  --sidebar-active: #241a13;
+  --ring: #e6955c;
+  --shadow-color: 0 0 0;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --grid: #33271e;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-crema: var(--crema);
+  --color-roast: var(--roast);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+
+  --shadow-soft: 0 1px 2px rgb(var(--shadow-color) / 0.06), 0 2px 8px rgb(var(--shadow-color) / 0.05);
+  --shadow-lift: 0 2px 4px rgb(var(--shadow-color) / 0.06), 0 12px 32px rgb(var(--shadow-color) / 0.12);
+  --shadow-float: 0 24px 64px rgb(var(--shadow-color) / 0.28);
+
+  --animate-fade-in: fade-in 180ms ease-out;
+  --animate-slide-in: slide-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-pop-in: pop-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    transform: translateY(6px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans text-sm;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-variation-settings:
+      'SOFT' 50,
+      'WONK' 0;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .field {
+    @apply w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink shadow-[inset_0_1px_1px_rgb(0_0_0/0.02)] transition-colors placeholder:text-ink-3 hover:border-line-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium text-ink-2;
+  }
+  /* Getönte Chips: Farbe über --c setzen (style={{'--c': farbe}}) */
+  .tint {
+    background-color: color-mix(in oklab, var(--c) 13%, var(--surface));
+    color: color-mix(in oklab, var(--c) 72%, var(--ink));
+  }
+  [data-theme='dark'] .tint {
+    background-color: color-mix(in oklab, var(--c) 24%, var(--surface));
+    color: color-mix(in oklab, var(--c) 45%, #fff);
+  }
+  .tint-border {
+    border-color: color-mix(in oklab, var(--c) 35%, var(--line));
+  }
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
