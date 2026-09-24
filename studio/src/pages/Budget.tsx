@@ -18,7 +18,7 @@ import {
   TriangleAlert,
   Wallet,
 } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Bar, BarChart, BarStack, CartesianGrid, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { CHART, ChartTooltip, Legend, StatTile } from '../components/charts'
 import { Badge, Button, Card, CardHeader, Input, Modal, PageHeader } from '../components/ui/primitives'
@@ -93,6 +93,18 @@ const planTotal = (plan: BudgetPlan) => sum(Object.values(plan), (row) => sum(Ob
 
 const PLAN_SWATCH = 'color-mix(in oklab, var(--ink-3) 40%, var(--surface))'
 
+/** ≥ 640px? Schmale Screens bekommen einbuchstabige Monatsachsen. */
+const wideQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 640px)') : null
+function useWide() {
+  return useSyncExternalStore(
+    (cb) => {
+      wideQuery?.addEventListener('change', cb)
+      return () => wideQuery?.removeEventListener('change', cb)
+    },
+    () => wideQuery?.matches ?? true,
+  )
+}
+
 type Confirm = { title: string; body: ReactNode; confirmLabel: string; danger?: boolean; run: () => void }
 
 // ---------------------------------------------------------------------------
@@ -113,6 +125,7 @@ export function BudgetPage() {
   const [confirm, setConfirm] = useState<Confirm | null>(null)
 
   const curIdx = year === thisYear ? today.getMonth() : -1
+  const wide = useWide()
   const months = useMemo(() => MONTH_SHORT.map((_, i) => monthKey(year, i)), [year])
 
   // Plan je Monat & Kanal
@@ -242,7 +255,7 @@ export function BudgetPage() {
       />
 
       {/* KPI-Kacheln */}
-      <section aria-label="Jahresüberblick" className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Jahresüberblick" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile
           label={`Jahresbudget ${year}`}
           icon={<Wallet className="size-4" />}
@@ -277,7 +290,7 @@ export function BudgetPage() {
       </section>
 
       {/* Chart + Verteilung */}
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="min-w-0 xl:col-span-2">
           <CardHeader
             title="Budget nach Monat & Kanal"
@@ -288,11 +301,11 @@ export function BudgetPage() {
             <Legend items={[...AD_CHANNELS.map((c) => ({ label: c.label, color: c.color })), { label: 'Monatsdeckel', color: 'var(--ink-3)', dashed: true }]} />
           </div>
           <div className="px-2 pt-3 pb-3">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={340}>
               <BarChart data={rows.map((r) => ({ month: r.month, total: r.total, ...r.values }))} margin={{ top: 16, right: 16, bottom: 0, left: 4 }}>
                 <CartesianGrid vertical={false} stroke={CHART.grid} />
                 {curIdx >= 0 ? <ReferenceArea x1={MONTH_SHORT[curIdx]} x2={MONTH_SHORT[curIdx]} fill="var(--accent-soft)" fillOpacity={0.7} /> : null}
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={<MonthTick current={curIdx} />} interval={0} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={<MonthTick current={curIdx} short={!wide} />} interval={0} />
                 <YAxis axisLine={false} tickLine={false} tick={CHART.tick} width={64} allowDecimals={false} tickFormatter={(v: number) => fmt.eur(v)} />
                 <Tooltip cursor={{ fill: 'var(--surface-2)', fillOpacity: 0.7 }} content={<StackTooltip cap={cap} />} />
                 <ReferenceLine
@@ -319,8 +332,8 @@ export function BudgetPage() {
       <BudgetGrid year={year} rows={rows} actual={actual} curIdx={curIdx} cap={cap} onCopyPrev={hasPrevPlan ? copyPrevYear : undefined} onClear={hasPlan ? clearYear : undefined} />
 
       {/* Plan vs. Ist + Saison */}
-      <div className="mt-4 grid gap-4 xl:grid-cols-3">
-        <PlanVsActualCard rows={rows} actual={actual} curIdx={curIdx} year={year} thisYear={thisYear} planToDate={planToDate} demo={demo} />
+      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <PlanVsActualCard rows={rows} actual={actual} curIdx={curIdx} year={year} thisYear={thisYear} planToDate={planToDate} demo={demo} wide={wide} />
         <SeasonCard rows={rows} total={yearTotal} />
       </div>
 
@@ -407,11 +420,11 @@ function CapTile({ cap, overCap, avg, className }: { cap: number; overCap: numbe
 // Chart-Helfer
 // ---------------------------------------------------------------------------
 
-function MonthTick({ x, y, payload, current }: { x?: number; y?: number; payload?: { value: string }; current: number }) {
+function MonthTick({ x, y, payload, current, short }: { x?: number; y?: number; payload?: { value: string }; current: number; short?: boolean }) {
   const active = current >= 0 && payload?.value === MONTH_SHORT[current]
   return (
     <text x={x} y={(y ?? 0) + 12} textAnchor="middle" fontSize={11} fill={active ? 'var(--ink)' : 'var(--ink-3)'} fontWeight={active ? 600 : 400}>
-      {payload?.value}
+      {short ? payload?.value.slice(0, 1) : payload?.value}
     </text>
   )
 }
@@ -599,10 +612,10 @@ function BudgetGrid({
                     scope="row"
                     className="sticky left-0 z-10 border-b border-line/70 bg-surface py-1 pr-3 pl-5 text-left font-medium whitespace-nowrap text-ink-2 group-hover:bg-surface-2"
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex max-w-32 items-center gap-2 sm:max-w-none" title={ch.label}>
                       <span className="size-2.5 shrink-0 rounded-[3px]" style={{ background: ch.color }} aria-hidden />
-                      {ch.label}
-                      {!ch.paid ? <span className="rounded bg-surface-2 px-1 text-[10px] font-normal text-ink-3">eigen</span> : null}
+                      <span className="truncate">{ch.label}</span>
+                      {!ch.paid ? <span className="hidden rounded bg-surface-2 px-1 text-[10px] font-normal text-ink-3 sm:inline">eigen</span> : null}
                     </span>
                   </th>
                   {rows.map((m, c) => (
@@ -733,6 +746,7 @@ function PlanVsActualCard({
   thisYear,
   planToDate,
   demo,
+  wide,
 }: {
   rows: MonthRow[]
   actual: number[]
@@ -741,6 +755,7 @@ function PlanVsActualCard({
   thisYear: number
   planToDate: number
   demo: boolean
+  wide: boolean
 }) {
   const data = rows.map((r) => ({
     month: r.month,
@@ -770,7 +785,7 @@ function PlanVsActualCard({
           <BarChart data={data} margin={{ top: 12, right: 16, bottom: 0, left: 4 }} barGap={2}>
             <CartesianGrid vertical={false} stroke={CHART.grid} />
             {curIdx >= 0 ? <ReferenceArea x1={MONTH_SHORT[curIdx]} x2={MONTH_SHORT[curIdx]} fill="var(--accent-soft)" fillOpacity={0.7} /> : null}
-            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={<MonthTick current={curIdx} />} interval={0} />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={<MonthTick current={curIdx} short={!wide} />} interval={0} />
             <YAxis axisLine={false} tickLine={false} tick={CHART.tick} width={64} allowDecimals={false} tickFormatter={(v: number) => fmt.eur(v)} />
             <Tooltip
               cursor={{ fill: 'var(--surface-2)', fillOpacity: 0.7 }}

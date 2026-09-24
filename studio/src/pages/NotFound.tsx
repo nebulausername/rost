@@ -10,7 +10,7 @@ export function NotFoundPage() {
       title="Hier ist der Kaffee alle."
       description="Diese Seite gibt es nicht (mehr). Zurück ins Cockpit?"
       action={
-        <Link to="/">
+        <Link to="/studio">
           <Button variant="primary">Zum Cockpit</Button>
         </Link>
       }

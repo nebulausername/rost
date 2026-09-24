@@ -48,6 +48,19 @@ import { CampaignStatusBadge, ChannelChips, DateRange, RuntimeLabel } from './Ca
 
 const ACTIVE_DOT = { r: 4, stroke: 'var(--surface)', strokeWidth: 2 }
 
+/** Runde Achsenwerte (1-2-2,5-5er-Schritte) statt krummer Auto-Ticks */
+function niceTicks(max: number, target = 4) {
+  if (!(max > 0)) return [0, 1]
+  const raw = max / target
+  const pow = 10 ** Math.floor(Math.log10(raw))
+  const step = ([1, 2, 2.5, 5, 10].find((f) => f * pow >= raw) ?? 10) * pow
+  const out: number[] = []
+  for (let v = 0; v < max + step * 0.001; v += step) out.push(Math.round(v * 100) / 100)
+  if (out[out.length - 1] < max) out.push(Math.round(out[out.length - 1] + step))
+  return out
+}
+const ratioDelta = (v: number) => `${v.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}×`
+
 export function CampaignDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -61,7 +74,7 @@ export function CampaignDetailPage() {
           title="Diese Kampagne gibt es nicht (mehr)"
           description="Vielleicht wurde sie gelöscht oder der Link ist veraltet. Alle laufenden und geplanten Kampagnen findest du in der Übersicht."
           action={
-            <Button onClick={() => navigate('/kampagnen')}>
+            <Button onClick={() => navigate('/studio/kampagnen')}>
               <ArrowLeft className="size-4" /> Alle Kampagnen
             </Button>
           }
@@ -101,7 +114,7 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
 
   const remove = () => {
     setConfirmDelete(false)
-    navigate('/kampagnen')
+    navigate('/studio/kampagnen')
     deleteCampaign(c.id)
     toast({ title: 'Kampagne gelöscht', description: `„${c.name}“ ist weg. Verknüpfte Posts bleiben erhalten.` })
   }
@@ -112,7 +125,7 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
     <div>
       {/* Kopf */}
       <header className="mb-6">
-        <Link to="/kampagnen" className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-ink-3 transition-colors hover:text-ink">
+        <Link to="/studio/kampagnen" className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-ink-3 transition-colors hover:text-ink">
           <ArrowLeft className="size-3.5" /> Alle Kampagnen
         </Link>
         <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -154,7 +167,7 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
       </header>
 
       {/* KPIs */}
-      <section aria-label="Kennzahlen" className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Kennzahlen" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile
           label="Ausgaben"
           icon={<Coins className="size-4" />}
@@ -213,13 +226,13 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
           value={fmt.eur(t.revenue)}
           trend={recent.map((d) => d.revenue)}
           trendLabels={trendLabels}
-          delta={tg.roas != null && t.spend ? <Delta value={t.roas - tg.roas} format={fmt.ratio} /> : undefined}
+          delta={tg.roas != null && t.spend ? <Delta value={t.roas - tg.roas} format={ratioDelta} /> : undefined}
           deltaLabel={tg.roas != null && t.spend ? `ROAS ${fmt.ratio(t.roas)} · Ziel ≥ ${fmt.ratio(tg.roas)}` : undefined}
           footnote={tg.roas != null && t.spend ? undefined : `ROAS ${dash(fmt.ratio(t.roas), t.spend > 0)}${tg.roas != null ? ` · Ziel ≥ ${fmt.ratio(tg.roas)}` : ''}`}
         />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <PacingCard campaign={c} pacing={p} spent={t.spend} today={today} />
         <div className="flex flex-col gap-4">
           <RecommendationsCard campaign={c} totals={t} pacing={p} today={today} />
@@ -301,7 +314,9 @@ function PacingCard({ campaign: c, pacing: p, spent, today }: { campaign: Campai
       rows.push(row)
     }
     const projected = forecast ? cumAtActual + avg * differenceInCalendarDays(end, actualEnd) : spent
-    return { rows, avg, forecast, projected, start, end }
+    const istCount = rows.filter((r) => r.ist != null).length
+    const top = Math.max(c.budget, projected, ...rows.map((r) => r.ist ?? 0))
+    return { rows, avg, forecast, projected, start, end, istCount, ticks: niceTicks(top) }
   }, [c, today, spent])
 
   const todayKey = dayKey(today)
@@ -397,7 +412,15 @@ function PacingCard({ campaign: c, pacing: p, spent, today }: { campaign: Campai
               minTickGap={36}
               tickFormatter={(v: string) => fmt.date(v, 'd. MMM')}
             />
-            <YAxis axisLine={false} tickLine={false} tick={CHART.tick} width={64} allowDecimals={false} tickFormatter={(v: number) => fmt.eur(v)} />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={CHART.tick}
+              width={64}
+              ticks={model.ticks}
+              domain={[0, model.ticks[model.ticks.length - 1]]}
+              tickFormatter={(v: number) => fmt.eur(v)}
+            />
             <Tooltip
               cursor={{ stroke: 'var(--line-strong)', strokeWidth: 1 }}
               content={<ChartTooltip valueFormat={(v) => fmt.eur(v)} labelFormat={(l) => fmt.date(String(l), 'EEE, d. MMM yyyy')} />}
@@ -413,7 +436,7 @@ function PacingCard({ campaign: c, pacing: p, spent, today }: { campaign: Campai
               strokeWidth={2}
               fill="var(--accent)"
               fillOpacity={0.1}
-              dot={false}
+              dot={model.istCount <= 2 ? { r: 3, fill: 'var(--accent)', stroke: 'var(--surface)', strokeWidth: 2 } : false}
               activeDot={ACTIVE_DOT}
             />
             <Line type="linear" dataKey="soll" name="Soll" stroke="var(--ink-3)" strokeWidth={2} strokeDasharray="4 4" dot={false} activeDot={ACTIVE_DOT} />
@@ -678,6 +701,26 @@ function RecommendationsCard({ campaign: c, totals: t, pacing: p, today }: { cam
       text: 'Budget im Plan, Ziele im grünen Bereich. Nächster Hebel: ein zweites Creative testen, um Ermüdung vorzubeugen.',
       action: { label: 'Creative planen', run: planCreative },
     })
+  } else if (hints.length < 3 && running && daysLeft > 7) {
+    // Ruhige Phase: proaktiver Test-Vorschlag, abhängig davon, wie viele Motive schon laufen
+    hints.push(
+      linked < 3
+        ? {
+            id: 'creative-test',
+            tone: 'accent',
+            icon: Sparkles,
+            title: 'Zweites Motiv testen',
+            text: `Erst ${linked === 0 ? 'kein' : linked === 1 ? 'ein' : 'zwei'} Creative verknüpft. Ein A/B-Test (z. B. Reel aus der Rösterei vs. Produktfoto) zeigt in ~7 Tagen, was besser zieht.`,
+            action: { label: 'Creative planen', run: planCreative },
+          }
+        : {
+            id: 'creative-fatigue',
+            tone: 'accent',
+            icon: Sparkles,
+            title: 'Creative-Ermüdung im Blick behalten',
+            text: 'Sinkt die CTR drei Tage in Folge, das schwächste Motiv pausieren und ein frisches nachschieben – Frequenz ≤ 3 pro Woche.',
+          },
+    )
   }
 
   const order = { warning: 0, accent: 1, success: 2 }
@@ -761,6 +804,7 @@ function DailyPerformanceCard({ campaign: c, hasData }: { campaign: Campaign; ha
   const m = METRICS[metric]
   const data = useMemo(() => c.daily.map((d) => ({ date: d.date, value: d[metric] })), [c.daily, metric])
   const avg = data.length ? sum(data, (d) => d.value) / data.length : 0
+  const ticks = niceTicks(Math.max(0, ...data.map((d) => d.value)))
   const best = data.reduce<{ date: string; value: number } | null>((acc, d) => (!acc || d.value > acc.value ? d : acc), null)
 
   return (
@@ -802,7 +846,7 @@ function DailyPerformanceCard({ campaign: c, hasData }: { campaign: Campaign; ha
                 minTickGap={28}
                 tickFormatter={(v: string) => fmt.date(v, 'd. MMM')}
               />
-              <YAxis axisLine={false} tickLine={false} tick={CHART.tick} width={56} allowDecimals={metric === 'revenue' || metric === 'spend'} tickFormatter={m.axis} />
+              <YAxis axisLine={false} tickLine={false} tick={CHART.tick} width={56} ticks={ticks} domain={[0, ticks[ticks.length - 1]]} tickFormatter={m.axis} />
               <Tooltip
                 cursor={{ fill: 'var(--surface-2)' }}
                 content={<ChartTooltip valueFormat={m.format} labelFormat={(l) => fmt.date(String(l), 'EEE, d. MMM')} />}
@@ -1225,7 +1269,7 @@ function DailyStatsCard({ campaign: c, today }: { campaign: Campaign; today: Dat
 
   const runImport = () => {
     for (const r of parsed.rows) upsertDaily(c.id, r)
-    toast({ title: `${parsed.rows.length} Tageswerte importiert`, description: parsed.skipped ? `${parsed.skipped} Zeilen übersprungen (z. B. Kopfzeile).` : undefined, tone: 'success' })
+    toast({ title: `${parsed.rows.length} Tageswerte importiert`, description: parsed.skipped ? `${parsed.skipped} ${parsed.skipped === 1 ? 'Zeile' : 'Zeilen'} übersprungen (z. B. Kopfzeile).` : undefined, tone: 'success' })
     setImportOpen(false)
     setCsv('')
   }
@@ -1253,7 +1297,7 @@ function DailyStatsCard({ campaign: c, today }: { campaign: Campaign; today: Dat
           </>
         }
       />
-      <div className="grid gap-6 px-5 pb-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 gap-6 px-5 pb-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         {/* Erfassen */}
         <div className="rounded-2xl border border-line bg-surface-2/50 p-4">
           <div className="flex items-center justify-between gap-2">

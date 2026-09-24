@@ -1,9 +1,11 @@
 import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 import { format, parseISO } from 'date-fns'
 import { de } from 'date-fns/locale'
 
+/** Klassen zusammenführen – spätere Tailwind-Klassen gewinnen (z. B. `w-auto` überschreibt `w-full`) */
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs)
+  return twMerge(clsx(inputs))
 }
 
 export function uid(prefix = 'id') {

@@ -25,6 +25,7 @@ import {
   Megaphone,
   PenLine,
   Sparkles,
+  Store,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -61,6 +62,9 @@ export function CockpitPage() {
   const ideas = useStore((s) => s.ideas)
   const budget = useStore((s) => s.budget)
   const team = useStore((s) => s.team)
+  const orders = useStore((s) => s.orders)
+  const bookings = useStore((s) => s.bookings)
+  const subscribers = useStore((s) => s.subscribers)
   const openPost = useUi((s) => s.openPost)
 
   const today = useMemo(() => new Date(), [])
@@ -151,6 +155,19 @@ export function CockpitPage() {
     })
   }, [posts, today])
 
+  const shop = useMemo(() => {
+    const from = subDays(today, 7)
+    const recent = orders.filter((o) => parseISO(o.createdAt) >= from)
+    return {
+      orders: recent.length,
+      revenue: sum(recent, (o) => o.total),
+      abos: recent.filter((o) => o.hasAbo).length,
+      bookings: bookings.filter((b) => parseISO(b.createdAt) >= from).reduce((a, b) => a + b.seats, 0),
+      subs: subscribers.filter((x) => parseISO(x.createdAt) >= from).length,
+      last: orders[0],
+    }
+  }, [orders, bookings, subscribers, today])
+
   const active = campaigns.filter((c) => c.status === 'active')
   const topIdea = [...ideas].sort((a, b) => b.votes - a.votes)[0]
   const weekPlanned = week.posts.filter((p) => p.status !== 'published' && parseISO(p.scheduledAt) >= today).length
@@ -179,7 +196,7 @@ export function CockpitPage() {
             <Button variant="primary" onClick={() => openPost(null)}>
               <PenLine className="size-4" /> Post planen
             </Button>
-            <Link to="/kalender">
+            <Link to="/studio/kalender">
               <Button className="border-white/10 bg-white/10 text-sidebar-ink shadow-none hover:bg-white/15">
                 Zum Kalender <ArrowRight className="size-4" />
               </Button>
@@ -247,7 +264,7 @@ export function CockpitPage() {
             title="Diese Woche"
             subtitle={`KW ${format(today, 'I')} · ${week.posts.length} Posts · Doppelklick auf einen Tag plant einen neuen Post`}
             action={
-              <Link to="/kalender" className="text-xs font-semibold text-accent-text hover:underline">
+              <Link to="/studio/kalender" className="text-xs font-semibold text-accent-text hover:underline">
                 Kalender öffnen
               </Link>
             }
@@ -333,7 +350,7 @@ export function CockpitPage() {
               ))}
             {todo.pacingIssues.map(({ c, p }) => (
               <li key={c.id}>
-                <Link to={`/kampagnen/${c.id}`} className="flex items-start gap-3 rounded-xl px-2 py-2 hover:bg-surface-2">
+                <Link to={`/studio/kampagnen/${c.id}`} className="flex items-start gap-3 rounded-xl px-2 py-2 hover:bg-surface-2">
                   <Badge tone={p.state === 'over' ? 'warning' : 'accent'}>{p.state === 'over' ? 'Zu schnell' : 'Zu langsam'}</Badge>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-ink">{c.name}</span>
@@ -347,7 +364,7 @@ export function CockpitPage() {
             ))}
             {topIdea ? (
               <li>
-                <Link to="/ideen" className="flex items-start gap-3 rounded-xl px-2 py-2 hover:bg-surface-2">
+                <Link to="/studio/ideen" className="flex items-start gap-3 rounded-xl px-2 py-2 hover:bg-surface-2">
                   <Badge tone="success">
                     <Lightbulb className="size-3" /> Top-Idee
                   </Badge>
@@ -368,7 +385,7 @@ export function CockpitPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {/* Reichweite */}
         <Card className="xl:col-span-2">
-          <CardHeader title="Organische Reichweite" subtitle="Summe pro Kalenderwoche aus veröffentlichten Posts" action={<Link to="/analytics" className="text-xs font-semibold text-accent-text hover:underline">Analytics</Link>} />
+          <CardHeader title="Organische Reichweite" subtitle="Summe pro Kalenderwoche aus veröffentlichten Posts" action={<Link to="/studio/analytics" className="text-xs font-semibold text-accent-text hover:underline">Analytics</Link>} />
           <div className="h-64 px-2 pb-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={kpi.weeks} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
@@ -434,7 +451,7 @@ export function CockpitPage() {
             subtitle="Budget-Pacing: Strich = Soll bis heute"
             icon={<Megaphone className="size-4" />}
             action={
-              <Link to="/kampagnen" className="text-xs font-semibold text-accent-text hover:underline">
+              <Link to="/studio/kampagnen" className="text-xs font-semibold text-accent-text hover:underline">
                 Alle Kampagnen
               </Link>
             }
@@ -447,7 +464,7 @@ export function CockpitPage() {
               const tone = p.state === 'over' ? 'warning' : p.state === 'under' ? 'accent' : 'success'
               return (
                 <li key={c.id}>
-                  <Link to={`/kampagnen/${c.id}`} className="-mx-2 grid grid-cols-1 gap-3 rounded-xl px-2 py-3.5 hover:bg-surface-2/60 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto] md:items-center">
+                  <Link to={`/studio/kampagnen/${c.id}`} className="-mx-2 grid grid-cols-1 gap-3 rounded-xl px-2 py-3.5 hover:bg-surface-2/60 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto] md:items-center">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-ink">{c.name}</p>
                       <p className="mt-0.5 text-[11px] text-ink-3">
@@ -483,7 +500,7 @@ export function CockpitPage() {
         {/* Anlässe & Budget */}
         <div className="flex flex-col gap-4">
           <Card>
-            <CardHeader title="Nächste Anlässe" icon={<CalendarHeart className="size-4" />} action={<Link to="/ideen" className="text-xs font-semibold text-accent-text hover:underline">Jahresplan</Link>} />
+            <CardHeader title="Nächste Anlässe" icon={<CalendarHeart className="size-4" />} action={<Link to="/studio/ideen" className="text-xs font-semibold text-accent-text hover:underline">Jahresplan</Link>} />
             <ul className="space-y-1 px-3 pb-4">
               {upcomingOcc.map((o) => {
                 const planned = posts.filter((p) => Math.abs(differenceInCalendarDays(parseISO(p.scheduledAt), o.start)) <= 3).length
@@ -521,7 +538,7 @@ export function CockpitPage() {
             </ul>
           </Card>
           <Card>
-            <CardHeader title="Budget diesen Monat" subtitle={`Plan je Kanal · ${formatDe(today, 'MMMM')}`} action={<Link to="/budget" className="text-xs font-semibold text-accent-text hover:underline">Planer</Link>} />
+            <CardHeader title="Budget diesen Monat" subtitle={`Plan je Kanal · ${formatDe(today, 'MMMM')}`} action={<Link to="/studio/budget" className="text-xs font-semibold text-accent-text hover:underline">Planer</Link>} />
             <div className="px-5 pb-5">
               <BarList
                 items={AD_CHANNELS.filter((c) => (budget[format(today, 'yyyy-MM')]?.[c.id] ?? 0) > 0).map((c) => ({
@@ -541,6 +558,33 @@ export function CockpitPage() {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader
+          title="Website & Shop · letzte 7 Tage"
+          subtitle={shop.last ? `Letzte Bestellung: ${shop.last.number} · ${formatDe(shop.last.createdAt, "d. MMM, HH:mm 'Uhr'")}` : 'Noch keine Bestellungen'}
+          icon={<Store className="size-4" />}
+          action={
+            <Link to="/studio/website" className="text-xs font-semibold text-accent-text hover:underline">
+              Website verwalten
+            </Link>
+          }
+        />
+        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-b-2xl border-t border-line bg-line sm:grid-cols-5">
+          {[
+            { label: 'Bestellungen', value: fmt.num(shop.orders) },
+            { label: 'Shop-Umsatz', value: fmt.eur(shop.revenue) },
+            { label: 'Neue Abos', value: fmt.num(shop.abos) },
+            { label: 'Workshop-Plätze gebucht', value: fmt.num(shop.bookings) },
+            { label: 'Newsletter-Anmeldungen', value: fmt.num(shop.subs) },
+          ].map((x) => (
+            <div key={x.label} className="bg-surface px-5 py-4">
+              <dt className="text-[11px] text-ink-3">{x.label}</dt>
+              <dd className="mt-1 text-xl font-semibold text-ink tabular">{x.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
 
       <div className="flex items-center justify-center gap-2 pt-2 text-[11px] text-ink-3">
         {team.slice(0, 2).map((m) => (

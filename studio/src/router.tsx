@@ -1,11 +1,40 @@
 import { createBrowserRouter } from 'react-router'
 import { AppShell } from './components/layout/AppShell'
 import { NotFoundPage } from './pages/NotFound'
+import { SiteShell } from './site/SiteShell'
 
-// Jede Seite als eigener Chunk – das Cockpit lädt nicht den Budget-Planer mit.
+const site = (load: () => Promise<Record<string, React.ComponentType>>, name: string) => () => load().then((m) => ({ Component: m[name] }))
+
+// Öffentliche Website (liest dieselben Daten wie das Studio)
+const siteRoutes = [
+  { path: 'shop', lazy: site(() => import('./site/pages/Shop'), 'ShopPage') },
+  { path: 'shop/:slug', lazy: site(() => import('./site/pages/Product'), 'ProductPage') },
+  { path: 'kasse', lazy: site(() => import('./site/pages/Checkout'), 'CheckoutPage') },
+  { path: 'geschmacksfinder', lazy: site(() => import('./site/pages/TasteFinder'), 'TasteFinderPage') },
+  { path: 'abo', lazy: site(() => import('./site/pages/Abo'), 'AboPage') },
+  { path: 'workshops', lazy: site(() => import('./site/pages/Workshops'), 'WorkshopsPage') },
+  { path: 'cafes', lazy: site(() => import('./site/pages/Cafes'), 'CafesPage') },
+  { path: 'herkunft', lazy: site(() => import('./site/pages/Origin'), 'OriginPage') },
+  { path: 'anleitungen', lazy: site(() => import('./site/pages/Guides'), 'GuidesPage') },
+  { path: 'anleitungen/:slug', lazy: site(() => import('./site/pages/Guide'), 'GuidePage') },
+  { path: 'ueber-uns', lazy: site(() => import('./site/pages/About'), 'AboutPage') },
+  { path: 'impressum', lazy: site(() => import('./site/pages/Legal'), 'LegalPage') },
+  { path: 'datenschutz', lazy: site(() => import('./site/pages/Legal'), 'LegalPage') },
+]
+
+// Website unter „/“, Studio unter „/studio“. Jede Seite ist ein eigener Chunk.
 export const router = createBrowserRouter([
   {
-    path: '/',
+    element: <SiteShell />,
+    HydrateFallback: BootScreen,
+    children: [
+      { index: true, lazy: site(() => import('./site/pages/Home'), 'HomePage') },
+      ...siteRoutes,
+      { path: '*', lazy: site(() => import('./site/pages/SiteNotFound'), 'SiteNotFoundPage') },
+    ],
+  },
+  {
+    path: '/studio',
     element: <AppShell />,
     HydrateFallback: BootScreen,
     children: [
@@ -18,6 +47,7 @@ export const router = createBrowserRouter([
       { path: 'budget', lazy: () => import('./pages/Budget').then((m) => ({ Component: m.BudgetPage })) },
       { path: 'analytics', lazy: () => import('./pages/Analytics').then((m) => ({ Component: m.AnalyticsPage })) },
       { path: 'bibliothek', lazy: () => import('./pages/Library').then((m) => ({ Component: m.LibraryPage })) },
+      { path: 'website', lazy: () => import('./pages/Website').then((m) => ({ Component: m.WebsitePage })) },
       { path: 'einstellungen', lazy: () => import('./pages/Settings').then((m) => ({ Component: m.SettingsPage })) },
       { path: '*', element: <NotFoundPage /> },
     ],

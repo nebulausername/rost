@@ -68,7 +68,7 @@ function defaults(): Draft {
     budget: '500',
     dailyLimit: '',
     startDate: dayKey(today),
-    endDate: dayKey(addDays(today, 30)),
+    endDate: dayKey(addDays(today, 29)), // 30 Tage Laufzeit inkl. Start- & Endtag
     audience: '',
     radiusKm: '20',
     ageMin: '20',
@@ -326,7 +326,7 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
       tone: 'success',
     })
     onClose()
-    if (isNew) navigate(`/kampagnen/${campaign.id}`)
+    if (isNew) navigate(`/studio/kampagnen/${campaign.id}`)
   }
 
   const copyUrl = () => {
@@ -365,7 +365,7 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
       }
     >
       <div
-        className="grid gap-5 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_260px]"
+        className="grid grid-cols-1 gap-5 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_260px]"
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault()

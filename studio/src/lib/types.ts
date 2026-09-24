@@ -184,3 +184,121 @@ export interface Settings {
   demoData: boolean
   brandName: string
 }
+
+// ---------------------------------------------------------------------------
+// Website (öffentlicher Shop & Inhalte – gepflegt im Studio-Modul „Website“)
+// ---------------------------------------------------------------------------
+
+export type BrewMethod = 'espresso' | 'filter' | 'french' | 'moka' | 'vollautomat' | 'aeropress'
+
+export type Grind = 'bohne' | 'espresso' | 'filter' | 'french' | 'moka'
+
+export interface Product {
+  id: string
+  slug: string
+  name: string
+  /** Kurzbeschreibung unter dem Namen, z. B. „Espresso-Blend 80/20“ */
+  subtitle: string
+  kind: 'espresso' | 'filter' | 'omni' | 'gift' | 'voucher'
+  origin: string
+  region: string
+  process: string
+  /** 1 = sehr hell … 5 = dunkel */
+  roast: number
+  notes: string[]
+  description: string
+  /** Warum heißt der Kaffee so? */
+  story: string
+  /** Preis 250 g (bzw. Stückpreis bei Geschenken) */
+  price: number
+  /** Preis 1 kg, falls angeboten */
+  priceKg: number | null
+  available: boolean
+  featured: boolean
+  /** Verpackungsfarbe */
+  color: string
+  brew: BrewMethod[]
+  /** Geschmacksprofil 1–5 für den Geschmacksfinder */
+  taste: { acidity: number; body: number; sweetness: number; chocolate: number; fruit: number }
+  /** Angaben, die noch mit der echten Produktseite abgeglichen werden müssen */
+  verify: boolean
+}
+
+export interface WorkshopSession {
+  id: string
+  /** ISO-Zeitpunkt */
+  startsAt: string
+  seatsTaken: number
+}
+
+export interface Workshop {
+  id: string
+  slug: string
+  title: string
+  subtitle: string
+  description: string
+  learn: string[]
+  durationMin: number
+  price: number
+  capacity: number
+  level: 'Einsteiger' | 'Fortgeschritten' | 'Alle'
+  location: 'roesterei' | 'espressobar'
+  color: string
+  sessions: WorkshopSession[]
+}
+
+/** Öffnungszeiten je Wochentag (0 = So … 6 = Sa); null = geschlossen */
+export type WeekHours = Record<number, { open: string; close: string } | null>
+
+export interface CafeLocation {
+  id: 'roesterei' | 'espressobar'
+  name: string
+  address: string
+  tagline: string
+  description: string
+  hours: WeekHours
+  /** Sonderhinweis, z. B. „Heute ab 8 Uhr wegen Zwiebelmarkt“ */
+  notice: string
+  features: string[]
+}
+
+export interface SiteSettings {
+  promo: { enabled: boolean; text: string; link: string; linkLabel: string }
+  heroTitle: string
+  heroText: string
+  prototypeNotice: boolean
+}
+
+export type CartItem =
+  | { key: string; kind: 'product'; productId: string; size: '250' | '1000'; grind: Grind; qty: number }
+  | { key: string; kind: 'abo'; productId: string | null; amount: 250 | 500 | 1000; rhythmWeeks: 2 | 4; grind: Grind; qty: number }
+  | { key: string; kind: 'voucher'; value: number; qty: number }
+
+export interface Order {
+  id: string
+  number: string
+  createdAt: string
+  customer: { name: string; email: string; city: string }
+  items: { label: string; detail: string; qty: number; unit: number }[]
+  shipping: number
+  total: number
+  hasAbo: boolean
+  utmSource: string | null
+}
+
+export interface Booking {
+  id: string
+  workshopId: string
+  sessionId: string
+  name: string
+  email: string
+  seats: number
+  gift: boolean
+  createdAt: string
+}
+
+export interface Subscriber {
+  email: string
+  source: string
+  createdAt: string
+}

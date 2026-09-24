@@ -124,6 +124,11 @@ function validateImport(raw: unknown, current: Settings): ImportResult {
     accounts: o.accounts as DataState['accounts'],
   }
   if (o.budget && typeof o.budget === 'object' && !Array.isArray(o.budget)) data.budget = o.budget as DataState['budget']
+  // Website-Bereiche sind optional (ältere Exporte kennen sie noch nicht)
+  for (const k of ['products', 'workshops', 'cafes', 'orders', 'bookings', 'subscribers'] as const) {
+    if (Array.isArray(o[k])) (data as Record<string, unknown>)[k] = o[k]
+  }
+  if (o.site && typeof o.site === 'object' && !Array.isArray(o.site)) data.site = o.site as DataState['site']
   if (o.settings && typeof o.settings === 'object' && !Array.isArray(o.settings)) {
     data.settings = { ...current, ...(o.settings as Partial<Settings>) }
   }
@@ -350,7 +355,7 @@ function BudgetSection() {
         description={
           <>
             Summe über alle Werbekanäle pro Monat. Der{' '}
-            <Link to="/budget" className="font-medium text-accent-text underline-offset-2 hover:underline">
+            <Link to="/studio/budget" className="font-medium text-accent-text underline-offset-2 hover:underline">
               Budget-Planer
             </Link>{' '}
             warnt, sobald ein Monat darüber liegt.
@@ -659,6 +664,13 @@ function DataSection() {
       accounts: s.accounts,
       budget: s.budget,
       settings: s.settings,
+      products: s.products,
+      workshops: s.workshops,
+      cafes: s.cafes,
+      site: s.site,
+      orders: s.orders,
+      bookings: s.bookings,
+      subscribers: s.subscribers,
     }
     const payload = { ...data, _meta: { app: 'Röstbrüder Studio', version: APP_VERSION, exportedAt: new Date().toISOString() } }
     downloadFile(`roestbrueder-studio-${dayKey(new Date())}.json`, JSON.stringify(payload, null, 2))

@@ -1,9 +1,12 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { seedAll } from './seed'
+import { CAFES, PRODUCTS, SITE_SETTINGS, seedSales, seedWorkshops } from './siteSeed'
 import type {
   AdChannel,
+  Booking,
   BudgetPlan,
+  CafeLocation,
   Campaign,
   CaptionTemplate,
   ChannelAccount,
@@ -11,10 +14,15 @@ import type {
   HashtagSet,
   Idea,
   KeyDate,
+  Order,
   Post,
   PostStatus,
+  Product,
   Settings,
+  SiteSettings,
+  Subscriber,
   TeamMember,
+  Workshop,
 } from './types'
 import { uid } from './utils'
 
@@ -29,6 +37,14 @@ export interface DataState {
   accounts: ChannelAccount[]
   budget: BudgetPlan
   settings: Settings
+  // Website
+  products: Product[]
+  workshops: Workshop[]
+  cafes: CafeLocation[]
+  site: SiteSettings
+  orders: Order[]
+  bookings: Booking[]
+  subscribers: Subscriber[]
 }
 
 interface Actions {
@@ -61,6 +77,16 @@ interface Actions {
   // Budget
   setBudgetCell: (month: string, channel: AdChannel, value: number) => void
   setBudgetMonths: (plan: BudgetPlan) => void
+  // Website
+  upsertProduct: (p: Product) => void
+  deleteProduct: (id: string) => void
+  upsertWorkshop: (w: Workshop) => void
+  deleteWorkshop: (id: string) => void
+  bookWorkshop: (b: Booking) => { ok: boolean; reason?: string }
+  placeOrder: (o: Order) => void
+  subscribe: (email: string, source: string) => boolean
+  updateCafe: (id: CafeLocation['id'], patch: Partial<CafeLocation>) => void
+  updateSite: (patch: Partial<SiteSettings>) => void
   // Einstellungen & Daten
   updateSettings: (patch: Partial<Settings>) => void
   resetDemo: () => void
@@ -76,8 +102,19 @@ const DEFAULT_SETTINGS: Settings = {
   brandName: 'Röstbrüder',
 }
 
+function freshSite() {
+  const workshops = seedWorkshops()
+  return {
+    products: PRODUCTS,
+    workshops,
+    cafes: CAFES,
+    site: SITE_SETTINGS,
+    ...seedSales(workshops),
+  }
+}
+
 function freshState(): DataState {
-  return { ...seedAll(new Date()), settings: DEFAULT_SETTINGS }
+  return { ...seedAll(new Date()), ...freshSite(), settings: DEFAULT_SETTINGS }
 }
 
 const touch = <T extends { updatedAt: string }>(x: T): T => ({ ...x, updatedAt: new Date().toISOString() })
@@ -176,6 +213,35 @@ export const useStore = create<DataState & Actions>()(
       setBudgetCell: (month, channel, value) =>
         set((s) => ({ budget: { ...s.budget, [month]: { ...s.budget[month], [channel]: Math.max(0, value) } } })),
       setBudgetMonths: (plan) => set((s) => ({ budget: { ...s.budget, ...plan } })),
+
+      upsertProduct: (p) =>
+        set((s) => ({ products: s.products.some((x) => x.id === p.id) ? s.products.map((x) => (x.id === p.id ? p : x)) : [...s.products, p] })),
+      deleteProduct: (id) => set((s) => ({ products: s.products.filter((p) => p.id !== id) })),
+      upsertWorkshop: (w) =>
+        set((s) => ({ workshops: s.workshops.some((x) => x.id === w.id) ? s.workshops.map((x) => (x.id === w.id ? w : x)) : [...s.workshops, w] })),
+      deleteWorkshop: (id) => set((s) => ({ workshops: s.workshops.filter((w) => w.id !== id), bookings: s.bookings.filter((b) => b.workshopId !== id) })),
+      bookWorkshop: (b) => {
+        const w = get().workshops.find((x) => x.id === b.workshopId)
+        const session = w?.sessions.find((x) => x.id === b.sessionId)
+        if (!w || !session) return { ok: false, reason: 'Termin nicht gefunden' }
+        if (session.seatsTaken + b.seats > w.capacity) return { ok: false, reason: 'Nicht mehr genug Plätze frei' }
+        set((s) => ({
+          bookings: [b, ...s.bookings],
+          workshops: s.workshops.map((x) =>
+            x.id === w.id ? { ...x, sessions: x.sessions.map((ss) => (ss.id === session.id ? { ...ss, seatsTaken: ss.seatsTaken + b.seats } : ss)) } : x,
+          ),
+        }))
+        return { ok: true }
+      },
+      placeOrder: (o) => set((s) => ({ orders: [o, ...s.orders] })),
+      subscribe: (email, source) => {
+        const e = email.trim().toLowerCase()
+        if (get().subscribers.some((x) => x.email === e)) return false
+        set((s) => ({ subscribers: [{ email: e, source, createdAt: new Date().toISOString() }, ...s.subscribers] }))
+        return true
+      },
+      updateCafe: (id, patch) => set((s) => ({ cafes: s.cafes.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+      updateSite: (patch) => set((s) => ({ site: { ...s.site, ...patch } })),
 
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
       resetDemo: () => set((s) => ({ ...freshState(), settings: { ...s.settings, demoData: true } })),

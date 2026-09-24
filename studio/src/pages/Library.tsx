@@ -1019,7 +1019,7 @@ function SeriesTab() {
     const title = `Serie: ${s.name}`
     const exists = ideas.some((i) => i.title === title)
     if (exists) {
-      toast({ title: 'Steht schon im Ideen-Backlog', description: title, action: { label: 'Ansehen', run: () => navigate('/ideen') } })
+      toast({ title: 'Steht schon im Ideen-Backlog', description: title, action: { label: 'Ansehen', run: () => navigate('/studio/ideen') } })
       return
     }
     upsertIdea({
@@ -1034,7 +1034,7 @@ function SeriesTab() {
       keyDateId: null,
       createdAt: new Date().toISOString(),
     })
-    toast({ title: 'Als Idee übernommen', description: s.name, tone: 'success', action: { label: 'Ansehen', run: () => navigate('/ideen') } })
+    toast({ title: 'Als Idee übernommen', description: s.name, tone: 'success', action: { label: 'Ansehen', run: () => navigate('/studio/ideen') } })
   }
 
   return (

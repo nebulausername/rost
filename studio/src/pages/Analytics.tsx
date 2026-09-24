@@ -180,7 +180,7 @@ export function AnalyticsPage() {
             <p>
               <span className="font-semibold text-ink">Beispielzahlen.</span> Echte Werte kommen in Phase 2 automatisch per API. Bis dahin
               trägst du Post-Kennzahlen im Post-Editor nach und Follower-Stände unter{' '}
-              <Link to="/einstellungen" className="font-medium text-accent-text underline-offset-2 hover:underline">
+              <Link to="/studio/einstellungen" className="font-medium text-accent-text underline-offset-2 hover:underline">
                 Einstellungen → Kanäle
               </Link>
               .
@@ -474,7 +474,7 @@ function FollowerCard({
             description="Trag die aktuellen Follower-Zahlen deiner Kanäle ein – jede Woche ein Wert reicht, dann entsteht hier die Wachstumskurve."
             action={
               <Link
-                to="/einstellungen"
+                to="/studio/einstellungen"
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-medium text-ink shadow-soft hover:border-line-strong hover:bg-surface-2"
               >
                 Zu den Kanälen <ArrowRight className="size-3.5" />

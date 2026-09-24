@@ -50,7 +50,7 @@ function PaletteBody() {
     const actions: Item[] = [
       { id: 'a-post', group: 'Aktionen', label: 'Neuen Post planen', icon: <Plus className="size-4" />, hint: <Kbd>N</Kbd>, keywords: 'erstellen social', run: close(() => openPost(null)) },
       { id: 'a-cmp', group: 'Aktionen', label: 'Neue Kampagne anlegen', icon: <Megaphone className="size-4" />, hint: <Kbd>W</Kbd>, keywords: 'werbung ads anzeige', run: close(() => openCampaign(null)) },
-      { id: 'a-idea', group: 'Aktionen', label: 'Idee festhalten', icon: <Lightbulb className="size-4" />, keywords: 'backlog', run: close(() => navigate('/ideen?neu=1')) },
+      { id: 'a-idea', group: 'Aktionen', label: 'Idee festhalten', icon: <Lightbulb className="size-4" />, keywords: 'backlog', run: close(() => navigate('/studio/ideen?neu=1')) },
       {
         id: 'a-theme',
         group: 'Aktionen',
@@ -91,7 +91,7 @@ function PaletteBody() {
       icon: <Megaphone className="size-4" />,
       hint: <span className="text-[11px] text-ink-3">{fmt.eur(c.budget)}</span>,
       keywords: `${c.audience} ${c.offer}`,
-      run: close(() => navigate(`/kampagnen/${c.id}`)),
+      run: close(() => navigate(`/studio/kampagnen/${c.id}`)),
     }))
     return [...actions, ...nav, ...cmpItems, ...postItems]
   }, [posts, campaigns, theme, navigate, openPost, openCampaign, setOpen, updateSettings])

@@ -32,7 +32,7 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Delta, Legend, Meter, StatTile } from '../components/charts'
 import { Badge, Button, Card, CardHeader, EmptyState, Input, PageHeader, Segmented, Select, Tint } from '../components/ui/primitives'
@@ -132,6 +132,8 @@ function pacingView(c: Campaign, p: Pacing, spent: number): { tone: Tone; text: 
       return { tone: 'success', text: 'Im Plan', icon: CircleCheck }
   }
 }
+
+const ratioDelta = (v: number) => `${v.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}×`
 
 const TONE_TEXT: Record<Tone, string> = {
   accent: 'text-accent-text',
@@ -259,7 +261,7 @@ export function CampaignsPage() {
         description="Alle bezahlten Aktionen an einem Ort: Budget im Blick, Pacing im Griff und sehen, was sich für Rösterei, Espressobar und Shop wirklich lohnt."
         actions={
           <>
-            <Button onClick={() => navigate('/budget')}>
+            <Button onClick={() => navigate('/studio/budget')}>
               <Wallet className="size-4" /> Budget-Planer
             </Button>
             <Button variant="primary" onClick={() => openCampaign(null)}>
@@ -294,7 +296,7 @@ export function CampaignsPage() {
             ]}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
             label="Ausgaben"
             icon={<Coins className="size-4" />}
@@ -329,7 +331,7 @@ export function CampaignsPage() {
                 ROAS <span className="font-semibold text-ink-2 tabular">{cur.spend ? fmt.ratio(cur.roas) : '–'}</span>
                 {prev.spend && cur.spend ? (
                   <>
-                    <Delta value={cur.roas - prev.roas} format={fmt.ratio} />
+                    <Delta value={cur.roas - prev.roas} format={ratioDelta} />
                     <span>vs. {fmt.ratio(prev.roas)}</span>
                   </>
                 ) : null}
@@ -383,7 +385,7 @@ export function CampaignsPage() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Kampagnen durchsuchen …"
+                placeholder="Suchen …"
                 aria-label="Kampagnen durchsuchen"
                 className="pl-9"
               />
@@ -437,7 +439,7 @@ export function CampaignsPage() {
 
       {/* Kampagnen-Karten */}
       {visible.length ? (
-        <ul className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3" aria-label="Kampagnen">
+        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3" aria-label="Kampagnen">
           {visible.map((c) => (
             <li key={c.id} className="flex">
               <CampaignCard campaign={c} today={today} />
@@ -465,7 +467,7 @@ export function CampaignsPage() {
       )}
 
       {/* Timeline & Kanal-Mix */}
-      <div className="mt-8 grid gap-4 xl:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <CampaignTimeline campaigns={campaigns} today={today} />
         <ChannelMix campaigns={campaigns} from={kpi.from} to={kpi.to} periodLabel={periodLabel} />
       </div>
@@ -492,7 +494,7 @@ function CampaignCard({ campaign: c, today }: { campaign: Campaign; today: Date 
   ]
   return (
     <Link
-      to={`/kampagnen/${c.id}`}
+      to={`/studio/kampagnen/${c.id}`}
       className="group flex w-full flex-col rounded-2xl border border-line bg-surface p-5 shadow-soft transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift"
     >
       <div className="flex items-center justify-between gap-2">
@@ -647,7 +649,7 @@ type Hover = { kind: 'campaign'; id: string } | { kind: 'date'; occ: KeyDateOccu
 
 const WINDOW_MONTHS = 6
 
-// Halbtransparente Füllung: Monatslinien & Heute-Linie scheinen durch, Text bleibt obenauf
+// Deckende, getönte Balken: Heute- & Monatslinien laufen dahinter, Beschriftungen bleiben ungestört
 const BAR_STYLE: Record<CampaignStatus, { color: string; fill: number; dashed?: boolean; progress: string }> = {
   active: { color: 'var(--accent)', fill: 16, progress: 'var(--accent)' },
   paused: { color: 'var(--warning)', fill: 18, progress: 'var(--warning)' },
@@ -656,8 +658,8 @@ const BAR_STYLE: Record<CampaignStatus, { color: string; fill: number; dashed?: 
 }
 
 const barCss = (s: (typeof BAR_STYLE)[CampaignStatus]): CSSProperties => ({
-  background: `color-mix(in oklab, ${s.color} ${s.fill}%, transparent)`,
-  borderColor: `color-mix(in oklab, ${s.color} ${s.dashed ? 55 : 38}%, transparent)`,
+  background: `color-mix(in oklab, ${s.color} ${s.fill}%, var(--surface))`,
+  borderColor: `color-mix(in oklab, ${s.color} ${s.dashed ? 55 : 38}%, var(--surface))`,
   borderStyle: s.dashed ? 'dashed' : 'solid',
   color: `color-mix(in oklab, ${s.color} 70%, var(--ink))`,
 })
@@ -673,6 +675,8 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
   const keyDates = useStore((s) => s.keyDates)
   const [offset, setOffset] = useState(0)
   const [hover, setHover] = useState<Hover>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const todayRef = useRef<HTMLDivElement>(null)
 
   const win = useMemo(() => {
     const start = startOfMonth(addMonths(today, offset - 2))
@@ -693,6 +697,19 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
   )
   const occ = useMemo(() => occurrencesBetween(keyDates, win.start, win.end), [keyDates, win])
   const showToday = today >= win.start && today <= win.end
+
+  // Auf schmalen Screens scrollt die Timeline so, dass „Heute“ sichtbar ist
+  useEffect(() => {
+    const el = scrollRef.current
+    const line = todayRef.current
+    if (!el || el.scrollWidth <= el.clientWidth) return
+    if (!line) {
+      el.scrollLeft = 0
+      return
+    }
+    const delta = line.getBoundingClientRect().left - el.getBoundingClientRect().left
+    el.scrollLeft += delta - el.clientWidth * 0.6
+  }, [offset])
   const todayPct = pct(today) + 50 / win.days
   const rangeLabel = `${fmt.date(win.months[0], 'MMM yyyy')} – ${fmt.date(win.months[WINDOW_MONTHS - 1], 'MMM yyyy')}`
 
@@ -730,7 +747,7 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
         />
       </div>
 
-      <div className="overflow-x-auto scrollbar-thin">
+      <div ref={scrollRef} className="overflow-x-auto scrollbar-thin">
         <div className="flex min-w-[720px]">
           {/* Namensspalte (bleibt beim horizontalen Scrollen stehen) */}
           <div className="sticky left-0 z-20 w-40 shrink-0 bg-surface pl-5 sm:w-52">
@@ -739,7 +756,7 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
             {rows.map((c) => (
               <Link
                 key={c.id}
-                to={`/kampagnen/${c.id}`}
+                to={`/studio/kampagnen/${c.id}`}
                 onMouseEnter={() => setHover({ kind: 'campaign', id: c.id })}
                 onMouseLeave={() => setHover(null)}
                 onFocus={() => setHover({ kind: 'campaign', id: c.id })}
@@ -767,7 +784,7 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
 
               {/* Heute-Linie (hinter den Balken) */}
               {showToday ? (
-                <div className="pointer-events-none absolute top-9 bottom-0 w-0.5 -translate-x-1/2 rounded-full bg-accent" style={{ left: `${todayPct}%` }} aria-hidden />
+                <div ref={todayRef} className="pointer-events-none absolute top-9 bottom-0 w-0.5 -translate-x-1/2 rounded-full bg-accent" style={{ left: `${todayPct}%` }} aria-hidden />
               ) : null}
 
               {/* Monatsköpfe */}
@@ -863,7 +880,7 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                 return (
                   <div key={c.id} className={cn('relative h-11 border-b border-line/70 transition-colors', isHover && 'bg-surface-2/60')}>
                     <Link
-                      to={`/kampagnen/${c.id}`}
+                      to={`/studio/kampagnen/${c.id}`}
                       onMouseEnter={() => setHover({ kind: 'campaign', id: c.id })}
                       onMouseLeave={() => setHover(null)}
                       onFocus={() => setHover({ kind: 'campaign', id: c.id })}

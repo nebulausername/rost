@@ -65,7 +65,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 <li key={n.to}>
                   <NavLink
                     to={n.to}
-                    end={n.to === '/'}
+                    end={n.to === '/studio'}
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
@@ -78,7 +78,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                       <>
                         <n.icon className={cn('size-4', isActive ? 'text-accent' : 'text-sidebar-muted group-hover:text-sidebar-ink')} />
                         <span className="flex-1 truncate">{n.label}</span>
-                        {n.to === '/pipeline' && reviewCount > 0 ? (
+                        {n.to === '/studio/pipeline' && reviewCount > 0 ? (
                           <span className="rounded-full bg-accent-solid px-1.5 text-[10px] leading-4 font-bold text-on-accent" title="Wartet auf Freigabe">
                             {reviewCount}
                           </span>
@@ -103,6 +103,15 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <ThemeSwitch />
         </div>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener"
+          className="mt-3 flex items-center justify-between rounded-lg border border-white/10 px-2.5 py-2 text-[12px] font-medium text-sidebar-ink/85 transition-colors hover:bg-sidebar-active hover:text-white"
+        >
+          roestbrueder.com ansehen
+          <span aria-hidden>↗</span>
+        </a>
         <p className="mt-3 text-[11px] leading-snug text-sidebar-muted">
           Rösterei · Richard-Wagner-Str. 17
           <br />
@@ -149,7 +158,7 @@ function useGlobalShortcuts() {
   const navigate = useNavigate()
   useEffect(() => {
     let gPressed = 0
-    const routes: Record<string, string> = { c: '/', k: '/kalender', p: '/pipeline', i: '/ideen', w: '/kampagnen', b: '/budget', a: '/analytics', l: '/bibliothek' }
+    const routes: Record<string, string> = { c: '/studio', k: '/studio/kalender', p: '/studio/pipeline', i: '/studio/ideen', w: '/studio/kampagnen', b: '/studio/budget', a: '/studio/analytics', l: '/studio/bibliothek', s: '/studio/website' }
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
       const typing = t.closest('input, textarea, select, [contenteditable="true"]')
@@ -199,7 +208,7 @@ export function AppShell() {
   const demo = useStore((s) => s.settings.demoData)
   const location = useLocation()
   const navigation = useNavigation()
-  const current = NAV.find((n) => (n.to === '/' ? location.pathname === '/' : location.pathname.startsWith(n.to)))
+  const current = NAV.find((n) => (n.to === '/studio' ? location.pathname === '/studio' || location.pathname === '/studio/' : location.pathname.startsWith(n.to)))
 
   useEffect(() => {
     document.title = current ? `${current.label} · Röstbrüder Studio` : 'Röstbrüder Studio'
