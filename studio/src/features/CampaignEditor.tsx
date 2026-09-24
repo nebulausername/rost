@@ -384,7 +384,7 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
                 onChange={(e) => set('name', e.target.value)}
                 placeholder="z. B. Kaffee-Abo Frühjahrsstart"
                 aria-invalid={!!show('name')}
-                className={cn(show('name') && 'border-danger')}
+                className={cn(show('name') && 'border-danger!')}
               />
               <FieldError text={show('name')} />
             </Field>
@@ -493,7 +493,7 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
                   min={draft.startDate || undefined}
                   onChange={(e) => set('endDate', e.target.value)}
                   aria-invalid={!!show('dates')}
-                  className={cn(show('dates') && 'border-danger')}
+                  className={cn(show('dates') && 'border-danger!')}
                 />
               </Field>
             </div>
@@ -555,7 +555,6 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
                 value={draft.audience}
                 onChange={(e) => set('audience', e.target.value)}
                 placeholder="z. B. Home-Baristas in Weimar & Umland, Retargeting Shop-Besucher 30 Tage"
-                className="min-h-20"
               />
             </Field>
             <div className="mt-3 grid grid-cols-3 gap-3">
@@ -634,7 +633,7 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
                 onChange={(e) => set('landingUrl', e.target.value)}
                 placeholder="https://roestbrueder.com/shop/"
                 aria-invalid={!!show('url')}
-                className={cn(show('url') && 'border-danger')}
+                className={cn(show('url') && 'border-danger!')}
               />
               <FieldError text={show('url')} />
               <div className="mt-2 flex flex-wrap gap-1">
@@ -718,13 +717,13 @@ function EditorDrawer({ campaignId, onClose }: { campaignId: string | null; onCl
                   set('utmCampaign', e.target.value)
                 }}
                 placeholder="2026-10_kaffee-abo-herbst"
-                className="font-mono text-[13px]"
+                className="font-mono"
               />
             </Field>
             <div className="mt-4 rounded-xl border border-line bg-surface-2 p-3">
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <p className="text-[11px] font-medium text-ink-3">Finaler Link</p>
-                <Button size="sm" variant="ghost" onClick={copyUrl} disabled={!finalUrl} className="-my-1 h-7">
+                <Button size="sm" variant="ghost" onClick={copyUrl} disabled={!finalUrl} className="-my-1">
                   <Copy className="size-3.5" /> Kopieren
                 </Button>
               </div>
@@ -911,7 +910,7 @@ function EuroInput({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={invalid}
-        className={cn('pr-8 text-right tabular', invalid && 'border-danger')}
+        className={cn('pr-8 text-right tabular', invalid && 'border-danger!')}
       />
       <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-ink-3">€</span>
     </div>
@@ -949,7 +948,7 @@ function TargetField({
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className={cn('pr-7 text-right tabular', recommended && !value && 'border-accent/40')}
+          className={cn('pr-7 text-right tabular', recommended && !value && 'border-accent/40!')}
         />
         <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-ink-3">{suffix}</span>
       </div>

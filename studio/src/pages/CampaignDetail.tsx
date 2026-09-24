@@ -11,7 +11,6 @@ import {
   Copy,
   Download,
   ExternalLink,
-  Eye,
   Flag,
   Funnel,
   Gauge,
@@ -37,7 +36,7 @@ import {
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { CHART, ChartTooltip, Delta, Legend, StatTile } from '../components/charts'
+import { CHART, ChartTooltip, Delta, Legend, Meter, StatTile } from '../components/charts'
 import { MediaThumb, PlatformStack, StatusBadge } from '../components/domain'
 import { Badge, Button, Card, CardHeader, EmptyState, Field, Input, Modal, Segmented, Select, Textarea } from '../components/ui/primitives'
 import { CAMPAIGN_STATUSES, OBJECTIVES } from '../lib/constants'
@@ -137,7 +136,7 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={c.status} onChange={(e) => setStatus(e.target.value as CampaignStatus)} aria-label="Status ändern" className="w-auto min-w-36">
+            <Select value={c.status} onChange={(e) => setStatus(e.target.value as CampaignStatus)} aria-label="Status ändern" className="w-auto! min-w-36">
               {(Object.keys(CAMPAIGN_STATUSES) as CampaignStatus[]).map((s) => (
                 <option key={s} value={s}>
                   {CAMPAIGN_STATUSES[s].label}
@@ -155,22 +154,28 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
       </header>
 
       {/* KPIs */}
-      <section aria-label="Kennzahlen" className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <section aria-label="Kennzahlen" className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile
           label="Ausgaben"
           icon={<Coins className="size-4" />}
           value={fmt.eur(t.spend)}
           trend={recent.map((d) => d.spend)}
           trendLabels={trendLabels}
-          footnote={`von ${fmt.eur(c.budget)} Budget · ${fmt.pct(p.spendShare)}`}
-        />
-        <StatTile
-          label="Impressionen"
-          icon={<Eye className="size-4" />}
-          value={fmt.compact(t.impressions)}
-          trend={recent.map((d) => d.impressions)}
-          trendLabels={trendLabels}
-          footnote={`CPM ${dash(fmt.eur2(t.cpm), t.impressions > 0)}`}
+          footnote={
+            <div className="space-y-1.5">
+              <Meter
+                value={t.spend}
+                max={c.budget}
+                marker={p.state === 'over' || p.state === 'under' || p.state === 'on-track' ? p.expected : undefined}
+                tone={p.state === 'over' || c.status === 'paused' ? 'warning' : p.state === 'on-track' ? 'success' : 'accent'}
+                height={5}
+                label="Budgetverbrauch"
+              />
+              <p className="tabular">
+                {fmt.pct(p.spendShare)} von {fmt.eur(c.budget)} Budget
+              </p>
+            </div>
+          }
         />
         <StatTile
           label="Klicks"
@@ -182,7 +187,8 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
           deltaLabel={tg.ctr != null && t.impressions ? `CTR ${fmt.pct(t.ctr)} · Ziel ≥ ${fmt.pct(tg.ctr)}` : undefined}
           footnote={[
             tg.ctr == null || !t.impressions ? `CTR ${dash(fmt.pct(t.ctr), t.impressions > 0)}${tg.ctr != null ? ` (Ziel ≥ ${fmt.pct(tg.ctr)})` : ''}` : null,
-            `CPC ${dash(fmt.eur2(t.cpc), t.clicks > 0)}${tg.cpc != null ? ` · Ziel ≤ ${fmt.eur2(tg.cpc)}` : ''}`,
+            `CPC ${dash(fmt.eur2(t.cpc), t.clicks > 0)}${tg.cpc != null ? ` (Ziel ≤ ${fmt.eur2(tg.cpc)})` : ''}`,
+            `${fmt.compact(t.impressions)} Impr.`,
           ]
             .filter(Boolean)
             .join(' · ')}
@@ -198,11 +204,10 @@ function CampaignDetail({ campaign: c }: { campaign: Campaign }) {
           footnote={
             tg.cpa != null && t.conversions
               ? `CVR ${fmt.pct(t.cvr)}`
-              : `CPA ${dash(fmt.eur2(t.cpa), t.conversions > 0)}${tg.cpa != null ? ` · Ziel ≤ ${fmt.eur2(tg.cpa)}` : ''}`
+              : `CPA ${dash(fmt.eur2(t.cpa), t.conversions > 0)}${tg.cpa != null ? ` · Ziel ≤ ${fmt.eur2(tg.cpa)}` : ''} · CVR ${dash(fmt.pct(t.cvr), t.clicks > 0)}`
           }
         />
         <StatTile
-          className="sm:col-span-2 lg:col-span-1"
           label="Umsatz"
           icon={<ShoppingBag className="size-4" />}
           value={fmt.eur(t.revenue)}
@@ -765,7 +770,16 @@ function DailyPerformanceCard({ campaign: c, hasData }: { campaign: Campaign; ha
         subtitle={hasData ? `${m.title} · Ø ${m.format(avg)}${best ? ` · Bester Tag ${fmt.date(best.date, 'd. MMM')} (${m.format(best.value)})` : ''}` : 'Noch keine Tageswerte'}
         icon={<ChartColumn className="size-4" />}
       />
-      <div className="-mt-1 overflow-x-auto px-5 pb-1 scrollbar-thin">
+      <div className="-mt-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 pb-1">
+        {hasData ? (
+          <Legend
+            className="order-2"
+            items={[
+              { label: m.label, color: 'var(--accent)' },
+              { label: `Ø ${m.format(avg)} pro Tag`, color: 'var(--ink-3)', dashed: true },
+            ]}
+          />
+        ) : null}
         <Segmented
           size="sm"
           label="Kennzahl"
@@ -793,12 +807,7 @@ function DailyPerformanceCard({ campaign: c, hasData }: { campaign: Campaign; ha
                 cursor={{ fill: 'var(--surface-2)' }}
                 content={<ChartTooltip valueFormat={m.format} labelFormat={(l) => fmt.date(String(l), 'EEE, d. MMM')} />}
               />
-              <ReferenceLine
-                y={avg}
-                stroke="var(--ink-3)"
-                strokeDasharray="4 4"
-                label={{ value: `Ø ${m.format(avg)}`, position: 'insideTopRight', fill: 'var(--ink-3)', fontSize: 11 }}
-              />
+              <ReferenceLine y={avg} stroke="var(--ink-3)" strokeDasharray="4 4" />
               <Bar dataKey="value" name={m.label} fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={24} />
             </BarChart>
           </ResponsiveContainer>
@@ -1386,7 +1395,6 @@ function DailyStatsCard({ campaign: c, today }: { campaign: Campaign; today: Dat
         open={importOpen}
         onClose={() => setImportOpen(false)}
         title="Tageswerte importieren"
-        className="max-w-xl"
         footer={
           <>
             <Button onClick={() => setImportOpen(false)}>Abbrechen</Button>
@@ -1406,7 +1414,7 @@ function DailyStatsCard({ campaign: c, today }: { campaign: Campaign; today: Dat
             value={csv}
             onChange={(e) => setCsv(e.target.value)}
             placeholder={'24.09.2026;18,40;4.210;41;2;76,50\n25.09.2026;21,10;4.890;52;1;38,00'}
-            className="min-h-40 font-mono text-xs"
+            className="min-h-40! font-mono text-xs!"
           />
         </Field>
         <p className="mt-2 text-[11px] text-ink-3">Datum als TT.MM.JJJJ oder JJJJ-MM-TT. Vorhandene Tage werden überschrieben.</p>

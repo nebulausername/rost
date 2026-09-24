@@ -294,7 +294,7 @@ export function CampaignsPage() {
             ]}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
             label="Ausgaben"
             icon={<Coins className="size-4" />}
@@ -302,9 +302,17 @@ export function CampaignsPage() {
             trend={kpi.curDays.map((d) => d.spend)}
             trendLabels={kpi.labels}
             footnote={
-              activeBudget.count
-                ? `Aktive Kampagnen: ${fmt.eur(activeBudget.spent)} von ${fmt.eur(activeBudget.budget)} verbraucht`
-                : 'Gerade läuft keine Kampagne'
+              activeBudget.count ? (
+                <div className="space-y-1.5">
+                  <Meter value={activeBudget.spent} max={activeBudget.budget} height={5} label="Budgetverbrauch aktiver Kampagnen" />
+                  <p>
+                    Aktive Kampagnen: <span className="font-medium text-ink-2 tabular">{fmt.eur(activeBudget.spent)}</span> von{' '}
+                    <span className="tabular">{fmt.eur(activeBudget.budget)}</span>
+                  </p>
+                </div>
+              ) : (
+                'Gerade läuft keine Kampagne'
+              )
             }
           />
           <StatTile
@@ -315,14 +323,18 @@ export function CampaignsPage() {
             trendLabels={kpi.labels}
             delta={revChange != null ? <Delta value={revChange} suffix=" %" /> : undefined}
             deltaLabel="vs. Vorperiode"
-          />
-          <StatTile
-            label="ROAS"
-            icon={<Target className="size-4" />}
-            value={cur.spend ? fmt.ratio(cur.roas) : '–'}
-            delta={prev.spend && cur.spend ? <Delta value={cur.roas - prev.roas} format={fmt.ratio} /> : undefined}
-            deltaLabel="vs. Vorperiode"
-            footnote="Umsatz je 1 € Werbebudget"
+            footnote={
+              <span className="inline-flex flex-wrap items-center gap-1.5">
+                <Target className="size-3" aria-hidden />
+                ROAS <span className="font-semibold text-ink-2 tabular">{cur.spend ? fmt.ratio(cur.roas) : '–'}</span>
+                {prev.spend && cur.spend ? (
+                  <>
+                    <Delta value={cur.roas - prev.roas} format={fmt.ratio} />
+                    <span>vs. {fmt.ratio(prev.roas)}</span>
+                  </>
+                ) : null}
+              </span>
+            }
           />
           <StatTile
             label="Conversions"
@@ -332,16 +344,15 @@ export function CampaignsPage() {
             trendLabels={kpi.labels}
             delta={convChange != null ? <Delta value={convChange} suffix=" %" /> : undefined}
             deltaLabel="vs. Vorperiode"
-            footnote={`CPA ${cur.conversions ? fmt.eur2(cur.cpa) : '–'}`}
+            footnote={`CPA ${cur.conversions ? fmt.eur2(cur.cpa) : '–'} · CVR ${cur.clicks ? fmt.pct(cur.cvr) : '–'}`}
           />
           <StatTile
-            className="sm:col-span-2 lg:col-span-1"
             label="Klickrate"
             icon={<MousePointerClick className="size-4" />}
             value={cur.impressions ? fmt.pct(cur.ctr) : '–'}
             delta={prev.impressions && cur.impressions ? <Delta value={(cur.ctr - prev.ctr) * 100} suffix=" Pp." /> : undefined}
             deltaLabel="vs. Vorperiode"
-            footnote={`CPC ${cur.clicks ? fmt.eur2(cur.cpc) : '–'} · ${fmt.num(cur.clicks)} Klicks`}
+            footnote={`CPC ${cur.clicks ? fmt.eur2(cur.cpc) : '–'} · ${fmt.num(cur.clicks)} Klicks · ${fmt.compact(cur.impressions)} Impr.`}
           />
         </div>
       </section>
@@ -372,12 +383,12 @@ export function CampaignsPage() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Kampagne, Zielgruppe, Angebot …"
+                placeholder="Kampagnen durchsuchen …"
                 aria-label="Kampagnen durchsuchen"
                 className="pl-9"
               />
             </div>
-            <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sortierung" className="w-auto">
+            <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sortierung" className="w-auto!">
               <option value="relevance">Relevanz</option>
               <option value="start">Startdatum</option>
               <option value="budget">Budget</option>
@@ -541,6 +552,7 @@ function CampaignCard({ campaign: c, today }: { campaign: Campaign; today: Date 
 function ChannelMix({ campaigns, from, to, periodLabel }: { campaigns: Campaign[]; from: string; to: string; periodLabel: string }) {
   const rows = useMemo(() => {
     const spend = Object.fromEntries(AD_CHANNELS.map((c) => [c.id, 0])) as Record<AdChannel, number>
+    const revenue = Object.fromEntries(AD_CHANNELS.map((c) => [c.id, 0])) as Record<AdChannel, number>
     const count = Object.fromEntries(AD_CHANNELS.map((c) => [c.id, 0])) as Record<AdChannel, number>
     for (const c of campaigns) {
       if (!c.channels.length) continue
@@ -549,11 +561,14 @@ function ChannelMix({ campaigns, from, to, periodLabel }: { campaigns: Campaign[
         if (d.date < from || d.date > to) continue
         touched = true
         // Mehrkanal-Kampagnen: Ausgaben gleichmäßig auf ihre Kanäle verteilen
-        for (const ch of c.channels) spend[ch] += d.spend / c.channels.length
+        for (const ch of c.channels) {
+          spend[ch] += d.spend / c.channels.length
+          revenue[ch] += d.revenue / c.channels.length
+        }
       }
       if (touched) for (const ch of c.channels) count[ch]++
     }
-    return AD_CHANNELS.map((c) => ({ ...c, value: spend[c.id], campaigns: count[c.id] }))
+    return AD_CHANNELS.map((c) => ({ ...c, value: spend[c.id], revenue: revenue[c.id], campaigns: count[c.id] }))
   }, [campaigns, from, to])
   const total = sum(rows, (r) => r.value)
   const withSpend = rows.filter((r) => r.value > 0)
@@ -585,7 +600,7 @@ function ChannelMix({ campaigns, from, to, periodLabel }: { campaigns: Campaign[
                 />
               ))}
             </div>
-            <ul className="mt-5 space-y-3">
+            <ul className="mt-5 space-y-4">
               {ranked.map((r) => (
                 <li key={r.id}>
                   <div className="mb-1 flex items-center justify-between gap-3 text-xs">
@@ -601,6 +616,9 @@ function ChannelMix({ campaigns, from, to, periodLabel }: { campaigns: Campaign[
                   <div className="h-1.5 w-full rounded-full bg-surface-2">
                     <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${(r.value / max) * 100}%`, background: r.color }} />
                   </div>
+                  <p className="mt-1 text-[11px] text-ink-3 tabular">
+                    {plural(r.campaigns, 'Kampagne', 'Kampagnen')} · Umsatz {fmt.eur(r.revenue)} · ROAS {r.value ? fmt.ratio(r.revenue / r.value) : '–'}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -629,12 +647,20 @@ type Hover = { kind: 'campaign'; id: string } | { kind: 'date'; occ: KeyDateOccu
 
 const WINDOW_MONTHS = 6
 
-const BAR_STYLE: Record<CampaignStatus, { className: string; color?: string; progress: string }> = {
-  active: { className: 'tint tint-border border', color: 'var(--accent)', progress: 'var(--accent)' },
-  paused: { className: 'tint tint-border border', color: 'var(--warning)', progress: 'var(--warning)' },
-  planned: { className: 'border border-dashed border-line-strong bg-surface-2 text-ink-2', progress: 'var(--accent)' },
-  completed: { className: 'border border-line bg-surface-3 text-ink-3', progress: 'var(--ink-3)' },
+// Halbtransparente Füllung: Monatslinien & Heute-Linie scheinen durch, Text bleibt obenauf
+const BAR_STYLE: Record<CampaignStatus, { color: string; fill: number; dashed?: boolean; progress: string }> = {
+  active: { color: 'var(--accent)', fill: 16, progress: 'var(--accent)' },
+  paused: { color: 'var(--warning)', fill: 18, progress: 'var(--warning)' },
+  planned: { color: 'var(--ink-3)', fill: 12, dashed: true, progress: 'var(--accent)' },
+  completed: { color: 'var(--ink-3)', fill: 20, progress: 'var(--ink-3)' },
 }
+
+const barCss = (s: (typeof BAR_STYLE)[CampaignStatus]): CSSProperties => ({
+  background: `color-mix(in oklab, ${s.color} ${s.fill}%, transparent)`,
+  borderColor: `color-mix(in oklab, ${s.color} ${s.dashed ? 55 : 38}%, transparent)`,
+  borderStyle: s.dashed ? 'dashed' : 'solid',
+  color: `color-mix(in oklab, ${s.color} 70%, var(--ink))`,
+})
 
 const STATUS_DOT: Record<CampaignStatus, string> = {
   active: 'var(--success)',
@@ -719,8 +745,8 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                 onFocus={() => setHover({ kind: 'campaign', id: c.id })}
                 onBlur={() => setHover(null)}
                 className={cn(
-                  'flex h-11 items-center gap-2 border-b border-line/70 pr-3 text-[13px] transition-colors',
-                  hoverCampaign?.id === c.id ? 'text-ink' : 'text-ink-2',
+                  '-ml-5 flex h-11 items-center gap-2 border-b border-line/70 pr-3 pl-5 text-[13px] transition-colors',
+                  hoverCampaign?.id === c.id ? 'bg-surface-2/60 text-ink' : 'text-ink-2',
                 )}
               >
                 <span className="size-2 shrink-0 rounded-full" style={{ background: STATUS_DOT[c.status] }} aria-hidden />
@@ -738,6 +764,11 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                   <div key={m.toISOString()} className="absolute top-0 bottom-0 w-px" style={{ left: `${pct(m)}%`, background: 'var(--grid)' }} aria-hidden />
                 ),
               )}
+
+              {/* Heute-Linie (hinter den Balken) */}
+              {showToday ? (
+                <div className="pointer-events-none absolute top-9 bottom-0 w-0.5 -translate-x-1/2 rounded-full bg-accent" style={{ left: `${todayPct}%` }} aria-hidden />
+              ) : null}
 
               {/* Monatsköpfe */}
               <div className="relative h-10">
@@ -824,6 +855,10 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                 const style = BAR_STYLE[c.status]
                 const spent = sum(c.daily, (d) => d.spend)
                 const share = c.budget ? clamp(spent / c.budget, 0, 1) : 0
+                // Unterkante relativ zur vollen Laufzeit, auch wenn der Balken am Fensterrand abgeschnitten ist
+                const fullLeft = pct(s)
+                const progressEnd = fullLeft + share * (pct(addDays(e, 1)) - fullLeft)
+                const progress = width ? clamp((progressEnd - left) / width, 0, 1) : 0
                 const isHover = hoverCampaign?.id === c.id
                 return (
                   <div key={c.id} className={cn('relative h-11 border-b border-line/70 transition-colors', isHover && 'bg-surface-2/60')}>
@@ -835,26 +870,23 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                       onBlur={() => setHover(null)}
                       aria-label={`${c.name}, ${CAMPAIGN_STATUSES[c.status].label}, Budget ${fmt.eur(c.budget)}`}
                       className={cn(
-                        'absolute top-1/2 flex h-7 -translate-y-1/2 items-center gap-1.5 overflow-hidden rounded-lg px-2 text-[11px] font-medium transition-shadow',
-                        style.className,
+                        'absolute top-1/2 flex h-7 -translate-y-1/2 items-center gap-1.5 overflow-hidden rounded-lg border px-2 text-[11px] font-medium transition-shadow',
                         clipL && 'rounded-l-none border-l-0',
                         clipR && 'rounded-r-none border-r-0',
                         isHover && 'shadow-lift',
                       )}
-                      style={{ left: `${left}%`, width: `${width}%`, minWidth: 8, ...(style.color ? { '--c': style.color } : {}) } as CSSProperties}
+                      style={{ left: `${left}%`, width: `${width}%`, minWidth: 8, ...barCss(style) }}
                     >
-                      {width > 14 ? (
-                        <>
-                          <span className="flex shrink-0 -space-x-0.5" aria-hidden>
-                            {AD_CHANNELS.filter((ch) => c.channels.includes(ch.id)).map((ch) => (
-                              <span key={ch.id} className="size-2 rounded-full ring-1 ring-surface" style={{ background: ch.color }} />
-                            ))}
-                          </span>
-                          <span className="truncate tabular">{fmt.eur(c.budget)}</span>
-                        </>
+                      {width > 5 ? (
+                        <span className="flex shrink-0 -space-x-0.5" aria-hidden>
+                          {AD_CHANNELS.filter((ch) => c.channels.includes(ch.id)).map((ch) => (
+                            <span key={ch.id} className="size-2 rounded-full ring-1 ring-surface" style={{ background: ch.color }} />
+                          ))}
+                        </span>
                       ) : null}
+                      {width > 7 + c.channels.length * 1.5 + fmt.eur(c.budget).length * 1.4 ? <span className="whitespace-nowrap tabular">{fmt.eur(c.budget)}</span> : null}
                       {spent > 0 ? (
-                        <span className="absolute bottom-0 left-0 h-[3px] rounded-r-full" style={{ width: `${share * 100}%`, background: style.progress }} aria-hidden />
+                        <span className="absolute bottom-0 left-0 h-[3px] rounded-r-full" style={{ width: `${progress * 100}%`, background: style.progress }} aria-hidden />
                       ) : null}
                     </Link>
                   </div>
@@ -865,10 +897,6 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                 <p className="py-10 text-center text-xs text-ink-3">In diesem Zeitraum läuft keine Kampagne – Platz für eine neue Idee.</p>
               ) : null}
 
-              {/* Heute-Linie */}
-              {showToday ? (
-                <div className="pointer-events-none absolute top-9 bottom-0 z-10 w-0.5 -translate-x-1/2 rounded-full bg-accent" style={{ left: `${todayPct}%` }} aria-hidden />
-              ) : null}
             </div>
           </div>
         </div>
