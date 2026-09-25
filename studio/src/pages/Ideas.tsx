@@ -597,7 +597,7 @@ function FilterChip({
     >
       {color ? <span className="size-2 rounded-full" style={{ background: color }} aria-hidden /> : null}
       {label}
-      <span className={cn('tabular', active ? 'opacity-80' : 'text-ink-3')}>{count}</span>
+      <span className={cn('tabular', active ? 'font-semibold' : 'text-ink-3')}>{count}</span>
     </button>
   )
 }
@@ -992,10 +992,10 @@ function YearPlan({
                         className={cn(
                           'tint inline-flex max-w-full items-center gap-1 rounded-md border px-1.5 py-0.5 text-left text-[11px] leading-4 font-medium transition-[filter] hover:brightness-95',
                           isCustomKeyDate(kd) ? 'tint-border border-dashed' : 'border-transparent',
-                          past && 'opacity-50',
+                          past && 'line-through saturate-0',
                         )}
                       >
-                        <span className="shrink-0 tabular opacity-75">{label}</span>
+                        <span className="shrink-0 tabular">{label}</span>
                         <span className="truncate">{kd.title}</span>
                       </button>
                     )

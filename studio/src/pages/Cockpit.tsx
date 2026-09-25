@@ -282,8 +282,7 @@ export function CockpitPage() {
                   onDoubleClick={() => openPost(null, { scheduledAt: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 9).toISOString() })}
                   className={cn(
                     'flex min-h-36 flex-col gap-1.5 rounded-xl border p-2',
-                    isToday(d) ? 'border-accent/60 bg-accent-soft/40' : 'border-line bg-surface-2/40',
-                    past && 'opacity-70',
+                    isToday(d) ? 'border-accent/60 bg-accent-soft/40' : past ? 'border-line/60 bg-surface-2/70' : 'border-line bg-surface-2/40',
                   )}
                 >
                   <div className="flex items-baseline justify-between">

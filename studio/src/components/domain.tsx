@@ -150,6 +150,7 @@ export function MediaThumb({
     <div
       className={cn('grain relative overflow-hidden', className)}
       style={{ backgroundImage: `linear-gradient(145deg, ${t.from}, ${t.to})`, color: t.ink }}
+      role={label ? 'img' : undefined}
       aria-label={label}
     >
       <svg viewBox="0 0 100 100" className="absolute -right-[12%] -bottom-[18%] w-[70%] opacity-[0.16]" aria-hidden>

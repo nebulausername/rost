@@ -33,7 +33,7 @@
   --roast: #5b3a29;
   --success: #4f7049;
   --success-soft: #e5eee2;
-  --warning: #b07a12;
+  --warning: #8a5d0c;
   --warning-soft: #f8edd3;
   --danger: #b3261e;
   --danger-soft: #f8e1de;
@@ -227,7 +227,7 @@
   /* Getönte Chips: Farbe über --c setzen (style={{'--c': farbe}}) */
   .tint {
     background-color: color-mix(in oklab, var(--c) 13%, var(--surface));
-    color: color-mix(in oklab, var(--c) 72%, var(--ink));
+    color: color-mix(in oklab, var(--c) 55%, var(--ink));
   }
   [data-theme='dark'] .tint {
     background-color: color-mix(in oklab, var(--c) 24%, var(--surface));

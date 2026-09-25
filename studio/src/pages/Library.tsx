@@ -232,7 +232,7 @@ function HashtagTab({ onNew, onEdit }: { onNew: () => void; onEdit: (s: HashtagS
                 <Card className="flex h-full flex-col p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="truncate font-semibold text-ink">{s.name}</h3>
+                      <h2 className="truncate font-semibold text-ink">{s.name}</h2>
                       <p className="mt-1 flex items-center gap-1.5 text-[11px] text-ink-3">
                         <span className="tabular">
                           {s.tags.length} {s.tags.length === 1 ? 'Hashtag' : 'Hashtags'}
@@ -403,7 +403,7 @@ function TemplateTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: Caption
                 <Card className="flex h-full flex-col p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="truncate font-semibold text-ink">{t.name}</h3>
+                      <h2 className="truncate font-semibold text-ink">{t.name}</h2>
                       <div className="mt-1">{t.pillar ? <PillarBadge pillar={t.pillar} /> : <Badge tone="muted">Alle Säulen</Badge>}</div>
                     </div>
                     <div className="flex shrink-0">

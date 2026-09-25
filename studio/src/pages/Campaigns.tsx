@@ -804,7 +804,7 @@ function CampaignTimeline({ campaigns, today }: { campaigns: Campaign[]; today: 
                 })}
                 {showToday ? (
                   <span
-                    className="absolute bottom-1 z-10 -translate-x-1/2 rounded-full bg-accent px-1.5 text-[10px] leading-4 font-semibold text-white shadow-soft"
+                    className="absolute bottom-1 z-10 -translate-x-1/2 rounded-full bg-accent-solid px-1.5 text-[10px] leading-4 font-semibold text-on-accent shadow-soft"
                     style={{ left: `${todayPct}%` }}
                   >
                     Heute
