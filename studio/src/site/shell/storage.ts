@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 // ---------------------------------------------------------------------------
 // Lokaler Speicher der Website (kann in privaten Fenstern / bei blockierten
@@ -82,3 +82,10 @@ export const recentlyViewed = createLocalList('rb-recently-viewed', 8)
 
 /** Letzte Suchbegriffe der Website-Suche */
 export const recentSearches = createLocalList('rb-recent-searches', 5)
+
+/** Merkt sich den Besuch einer Produktseite */
+export function useTrackProductView(slug: string | undefined) {
+  useEffect(() => {
+    if (slug) recentlyViewed.push(slug)
+  }, [slug])
+}

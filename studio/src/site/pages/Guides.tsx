@@ -29,7 +29,7 @@ export function GuidesPage() {
             <Link
               key={g.slug}
               to={`/anleitungen/${g.slug}`}
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface pr-4 pl-2 text-sm font-medium text-ink-2 transition-colors hover:border-accent hover:text-ink"
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface pr-4 pl-2 text-sm font-medium text-ink-2 transition-colors hover:border-accent hover:text-ink"
             >
               <BrewIcon name={g.icon} className="size-7" />
               {g.title.replace(' (V60)', '')}
@@ -106,9 +106,10 @@ function GuideCard({ guide: g }: { guide: BrewGuide }) {
           </div>
           <div>
             <dt className="text-[11px] font-semibold tracking-[0.1em] text-ink-3 uppercase">Level</dt>
-            <dd className="mt-1.5 flex gap-1" aria-label={g.difficulty}>
+            <dd className="mt-1.5 flex gap-1">
+              <span className="sr-only">{g.difficulty}</span>
               {[1, 2, 3].map((i) => (
-                <span key={i} className={cn('h-1.5 w-4 rounded-full', i <= DIFF_LEVEL[g.difficulty] ? 'bg-accent' : 'bg-surface-3')} />
+                <span key={i} aria-hidden className={cn('h-1.5 w-4 rounded-full', i <= DIFF_LEVEL[g.difficulty] ? 'bg-accent' : 'bg-surface-3')} />
               ))}
             </dd>
           </div>
@@ -221,7 +222,7 @@ function BrewCalculator() {
                   value={ratio}
                   onChange={(e) => changeRatio(Number(e.target.value))}
                   aria-valuetext={`1 zu ${deNum(ratio)}, ${strength}`}
-                  className="mt-3 w-full accent-[var(--accent)]"
+                  className="mt-1 h-11 w-full cursor-pointer accent-[var(--accent)]"
                 />
                 <div className="mt-1 flex justify-between text-xs text-sidebar-muted">
                   <span>1:12 · kräftiger</span>
@@ -241,7 +242,7 @@ function BrewCalculator() {
                     onClick={() => changeRatio(p.r)}
                     aria-pressed={ratio === p.r}
                     className={cn(
-                      'h-9 rounded-full px-3.5 text-sm font-medium transition-colors',
+                      'h-11 rounded-full px-3.5 text-sm font-medium transition-colors sm:h-9',
                       ratio === p.r ? 'bg-accent-solid text-on-accent' : 'bg-white/10 text-sidebar-ink hover:bg-white/20',
                     )}
                   >
@@ -300,7 +301,7 @@ function NumberRow({
         <button
           type="button"
           onClick={() => onChange(value - step)}
-          className="flex size-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+          className="flex size-11 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
           aria-label={`${label} verringern`}
         >
           <Minus className="size-4" aria-hidden />
@@ -325,7 +326,7 @@ function NumberRow({
         <button
           type="button"
           onClick={() => onChange(value + step)}
-          className="flex size-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+          className="flex size-11 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
           aria-label={`${label} erhöhen`}
         >
           <Plus className="size-4" aria-hidden />

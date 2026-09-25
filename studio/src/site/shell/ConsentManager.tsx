@@ -1,76 +1,13 @@
 import { BarChart3, Check, Lock, Megaphone, ShieldCheck, X, type LucideIcon } from 'lucide-react'
-import { useCallback, useId, useRef, useState } from 'react'
+import { useCallback, useId, useRef, useState, type RefObject } from 'react'
 import { Link } from 'react-router'
-import { create } from 'zustand'
 import { cn } from '../../lib/utils'
+import { useConsent, useConsentUi, type Prefs } from './consent'
 import { useDialog, usePresence } from './hooks'
-import { readLocal, writeLocal } from './storage'
 
 // ---------------------------------------------------------------------------
-// Cookie-Einwilligung (DSGVO/TTDSG) – ohne Dark Patterns:
-// „Alle akzeptieren“ und „Nur notwendige“ sind gleich gewichtet, optionale Kategorien
-// sind standardmäßig aus. Gespeichert wird lokal mit Version & Datum.
-// Der Prototyp setzt keine Tracking-Cookies – useConsent() ist der Anschluss für später.
+// Cookie-Banner beim ersten Besuch + Einstellungs-Dialog (Footer-Link „Cookie-Einstellungen“)
 // ---------------------------------------------------------------------------
-
-export const CONSENT_KEY = 'rb-consent'
-/** Erhöhen, wenn sich Kategorien/Zwecke ändern → alle werden neu gefragt */
-export const CONSENT_VERSION = 1
-
-export interface ConsentRecord {
-  v: number
-  /** ISO-Zeitpunkt der Entscheidung */
-  date: string
-  statistics: boolean
-  marketing: boolean
-}
-
-type Prefs = Pick<ConsentRecord, 'statistics' | 'marketing'>
-
-const isRecord = (x: unknown): x is ConsentRecord => {
-  if (!x || typeof x !== 'object') return false
-  const r = x as Record<string, unknown>
-  return r.v === CONSENT_VERSION && typeof r.date === 'string' && typeof r.statistics === 'boolean' && typeof r.marketing === 'boolean'
-}
-
-interface ConsentStore {
-  record: ConsentRecord | null
-  settingsOpen: boolean
-  save: (prefs: Prefs) => void
-  setSettingsOpen: (open: boolean) => void
-}
-
-const useConsentStore = create<ConsentStore>()((set) => ({
-  record: typeof window === 'undefined' ? null : readLocal<ConsentRecord | null>(CONSENT_KEY, null, isRecord),
-  settingsOpen: false,
-  save: (prefs) => {
-    const record: ConsentRecord = { v: CONSENT_VERSION, date: new Date().toISOString(), ...prefs }
-    writeLocal(CONSENT_KEY, record)
-    set({ record, settingsOpen: false })
-  },
-  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
-}))
-
-/** Aktuelle Einwilligung + Aktionen. `statistics`/`marketing` sind false, solange nicht entschieden. */
-export function useConsent() {
-  const record = useConsentStore((s) => s.record)
-  const save = useConsentStore((s) => s.save)
-  const setSettingsOpen = useConsentStore((s) => s.setSettingsOpen)
-  return {
-    decided: record !== null,
-    necessary: true as const,
-    statistics: record?.statistics ?? false,
-    marketing: record?.marketing ?? false,
-    date: record?.date ?? null,
-    acceptAll: () => save({ statistics: true, marketing: true }),
-    acceptNecessary: () => save({ statistics: false, marketing: false }),
-    save,
-    openSettings: () => setSettingsOpen(true),
-  }
-}
-
-/** Öffnet die Einstellungen von überall (z. B. Link in Footer oder Datenschutz) */
-export const openConsentSettings = () => useConsentStore.getState().setSettingsOpen(true)
 
 const CATEGORIES: { id: 'necessary' | keyof Prefs; title: string; icon: LucideIcon; text: string; examples: string }[] = [
   {
@@ -113,13 +50,9 @@ function PrototypeHint({ className }: { className?: string }) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Banner beim ersten Besuch + Einstellungs-Dialog
-// ---------------------------------------------------------------------------
-
 export function ConsentManager() {
-  const record = useConsentStore((s) => s.record)
-  const settingsOpen = useConsentStore((s) => s.settingsOpen)
+  const record = useConsentUi((s) => s.record)
+  const settingsOpen = useConsentUi((s) => s.settingsOpen)
   return (
     <>
       {record === null && !settingsOpen ? <ConsentBanner /> : null}
@@ -170,7 +103,7 @@ function ConsentBanner() {
 }
 
 function ConsentSettings({ open }: { open: boolean }) {
-  const setSettingsOpen = useConsentStore((s) => s.setSettingsOpen)
+  const setSettingsOpen = useConsentUi((s) => s.setSettingsOpen)
   const close = useCallback(() => setSettingsOpen(false), [setSettingsOpen])
   const { mounted, closing } = usePresence(open, 220)
   const ref = useRef<HTMLDivElement>(null)
@@ -189,7 +122,7 @@ function ConsentSettings({ open }: { open: boolean }) {
   )
 }
 
-function SettingsPanel({ panelRef, closing, onClose }: { panelRef: React.RefObject<HTMLDivElement | null>; closing: boolean; onClose: () => void }) {
+function SettingsPanel({ panelRef, closing, onClose }: { panelRef: RefObject<HTMLDivElement | null>; closing: boolean; onClose: () => void }) {
   const { save, date, statistics, marketing, decided } = useConsent()
   const [prefs, setPrefs] = useState<Prefs>({ statistics, marketing })
   const titleId = useId()

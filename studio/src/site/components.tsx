@@ -164,13 +164,16 @@ export function siteButtonClass(variant: 'primary' | 'secondary' | 'ghost' | 'li
 
 export function RoastMeter({ roast, className }: { roast: number; className?: string }) {
   return (
-    <div className={cn('flex items-center gap-2', className)} aria-label={`Röstgrad ${ROAST_LABELS[roast]}`}>
-      <div className="flex gap-1">
+    <div className={cn('flex items-center gap-2', className)}>
+      <div className="flex gap-1" aria-hidden>
         {[1, 2, 3, 4, 5].map((i) => (
           <span key={i} className={cn('h-1.5 w-5 rounded-full', i <= roast ? 'bg-roast' : 'bg-surface-3')} />
         ))}
       </div>
-      <span className="text-xs whitespace-nowrap text-ink-3">{ROAST_LABELS[roast]}</span>
+      <span className="text-xs whitespace-nowrap text-ink-3">
+        <span className="sr-only">Röstgrad: </span>
+        {ROAST_LABELS[roast]}
+      </span>
     </div>
   )
 }
@@ -188,9 +191,10 @@ export function TasteBars({ taste, className }: { taste: Product['taste']; class
       {rows.map((r) => (
         <div key={r.key} className="grid grid-cols-[88px_1fr] items-center gap-3">
           <dt className="text-xs text-ink-2">{r.label}</dt>
-          <dd className="flex gap-1" aria-label={`${r.label}: ${taste[r.key]} von 5`}>
+          <dd className="flex gap-1">
+            <span className="sr-only">{taste[r.key]} von 5</span>
             {[1, 2, 3, 4, 5].map((i) => (
-              <span key={i} className={cn('h-2 flex-1 rounded-full', i <= taste[r.key] ? 'bg-accent' : 'bg-surface-3')} />
+              <span key={i} aria-hidden className={cn('h-2 flex-1 rounded-full', i <= taste[r.key] ? 'bg-accent' : 'bg-surface-3')} />
             ))}
           </dd>
         </div>

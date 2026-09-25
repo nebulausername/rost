@@ -167,10 +167,10 @@ function UpcomingCard({ items, onBook }: { items: { w: Workshop; s: WorkshopSess
                   type="button"
                   disabled={!left}
                   onClick={() => onBook(w, s)}
-                  className="group flex w-full items-center gap-4 rounded-2xl bg-white/[0.06] p-3 text-left ring-1 ring-white/10 transition-colors hover:bg-white/[0.12] disabled:opacity-60"
+                  className="group flex min-h-14 w-full items-center gap-4 rounded-2xl bg-white/[0.06] p-3 text-left ring-1 ring-white/10 transition-colors hover:bg-white/[0.12] disabled:opacity-60"
                 >
-                  <span className="flex w-14 shrink-0 flex-col items-center rounded-xl py-1.5 text-center" style={{ background: w.color }}>
-                    <span className="text-[10px] font-semibold tracking-wider text-white/80 uppercase">{formatDe(s.startsAt, 'MMM')}</span>
+                  <span className="flex w-14 shrink-0 flex-col items-center rounded-xl py-1.5 text-center" style={{ background: `color-mix(in oklab, ${w.color} 74%, black)` }}>
+                    <span className="text-[10px] font-bold tracking-wider text-white uppercase">{formatDe(s.startsAt, 'MMM')}</span>
                     <span className="tabular font-display text-2xl leading-none font-semibold text-white">{formatDe(s.startsAt, 'd')}</span>
                   </span>
                   <span className="min-w-0 flex-1">
@@ -301,7 +301,7 @@ function SessionChip({ workshop: w, session: s, onClick }: { workshop: Workshop;
       onClick={onClick}
       disabled={full}
       className={cn(
-        'group flex w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition-[border-color,background-color,transform] duration-200 sm:w-auto sm:min-w-[9.5rem] sm:flex-col sm:items-start sm:justify-start sm:gap-0',
+        'group flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition-[border-color,background-color,transform] duration-200 sm:w-auto sm:min-w-[9.5rem] sm:flex-col sm:items-start sm:justify-start sm:gap-0',
         full ? 'cursor-not-allowed border-line bg-surface-2 opacity-70' : 'border-line bg-surface hover:-translate-y-0.5 hover:border-[var(--c)]',
         last && 'border-accent bg-accent-soft',
       )}
@@ -335,9 +335,7 @@ function HowItWorks() {
         <ol className="grid gap-8 md:grid-cols-3">
           {steps.map((s, i) => (
             <li key={s.t} className="relative">
-              <span className="font-display text-7xl leading-none font-semibold text-accent/30" aria-hidden>
-                0{i + 1}
-              </span>
+              <span className="block font-display text-7xl leading-none font-semibold text-accent/30 before:content-[attr(data-n)]" data-n={`0${i + 1}`} aria-hidden />
               <h3 className="mt-3 text-xl font-semibold text-ink">{s.t}</h3>
               <p className="mt-2 leading-relaxed text-ink-2">{s.d}</p>
             </li>

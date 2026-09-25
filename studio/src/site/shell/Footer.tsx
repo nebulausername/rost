@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils'
 import { Container, OpenBadge } from '../components'
 import { compactHours } from '../lib'
 import { FACEBOOK_URL, INSTAGRAM_URL, isEmail, mapsUrl } from './hooks'
+import { openConsentSettings } from './consent'
 import { BeanMark } from './Logo'
 
 const COLUMNS: { title: string; links: { to: string; label: string }[] }[] = [
@@ -43,6 +44,8 @@ const COLUMNS: { title: string; links: { to: string; label: string }[] }[] = [
     ],
   },
 ]
+
+const footerLink = 'inline-flex min-h-11 min-w-11 items-center text-[15px] text-ink-2 transition-colors hover:text-accent-text md:min-h-8'
 
 type NewsletterState = 'idle' | 'invalid' | 'success' | 'duplicate'
 
@@ -151,7 +154,7 @@ export function Footer() {
   const cafes = useStore((s) => s.cafes)
   const year = new Date().getFullYear()
   return (
-    <footer className="relative overflow-hidden border-t border-line bg-surface-2/50 pt-16 md:pt-24" aria-labelledby="footer-title">
+    <footer className="rb-cv relative overflow-hidden border-t border-line bg-surface-2/50 pt-16 md:pt-24" aria-labelledby="footer-title">
       <h2 id="footer-title" className="sr-only">
         Fußbereich
       </h2>
@@ -178,9 +181,9 @@ export function Footer() {
                     href={mapsUrl(c.address)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1.5 inline-flex items-start gap-1.5 text-sm text-ink-2 transition-colors hover:text-accent-text"
+                    className="mt-0.5 inline-flex min-h-11 items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-accent-text"
                   >
-                    <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                    <MapPin className="size-3.5 shrink-0" aria-hidden />
                     <span>
                       {c.address}
                       <span className="sr-only"> (Karte in neuem Fenster)</span>
@@ -203,14 +206,21 @@ export function Footer() {
             {COLUMNS.map((col) => (
               <nav key={col.title} aria-label={col.title}>
                 <p className="mb-4 text-[11px] font-semibold tracking-[0.2em] text-ink-3 uppercase">{col.title}</p>
-                <ul className="space-y-2.5">
+                <ul className="md:space-y-1">
                   {col.links.map((l) => (
                     <li key={l.to}>
-                      <Link to={l.to} className="text-[15px] text-ink-2 transition-colors hover:text-accent-text">
+                      <Link to={l.to} className={footerLink}>
                         {l.label}
                       </Link>
                     </li>
                   ))}
+                  {col.title === 'Rechtliches' ? (
+                    <li>
+                      <button type="button" onClick={openConsentSettings} className={cn(footerLink, 'text-left')}>
+                        Cookie-Einstellungen
+                      </button>
+                    </li>
+                  ) : null}
                 </ul>
               </nav>
             ))}
@@ -244,10 +254,9 @@ export function Footer() {
       </Container>
 
       {/* Riesige Wortmarke als typografischer Abschluss */}
+      {/* als Pseudo-Element: rein dekorativ, bleibt aus dem Accessibility-Baum */}
       <div aria-hidden className="pointer-events-none mt-16 overflow-hidden select-none md:mt-20">
-        <p className="-mb-[0.22em] text-center font-display text-[22vw] leading-none font-semibold tracking-[-0.04em] text-ink/[0.06] lg:text-[19vw]">
-          Röstbrüder
-        </p>
+        <p className="-mb-[0.22em] text-center font-display text-[22vw] leading-none font-semibold tracking-[-0.04em] text-ink/[0.06] before:content-[attr(data-wordmark)] lg:text-[19vw]" data-wordmark="Röstbrüder" />
       </div>
       <div className="relative border-t border-line bg-canvas">
         <Container className="flex flex-col items-center justify-between gap-2 py-5 text-xs text-ink-3 sm:flex-row">

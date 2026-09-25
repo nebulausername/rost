@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, Gift, Repeat, RotateCcw, SlidersHorizontal, Sparkles, Truck } from 'lucide-react'
+import { ArrowRight, ChevronDown, Gift, Repeat, RotateCcw, ShoppingBag, SlidersHorizontal, Sparkles, Truck } from 'lucide-react'
 import { useId, useMemo, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ABO_PRICES, FREE_SHIPPING_FROM, useCart } from '../../lib/cart'
@@ -8,7 +8,9 @@ import { cn } from '../../lib/utils'
 import { CoffeeBag, Container, Eyebrow, siteButtonClass } from '../components'
 import { BREW_LABELS, price } from '../lib'
 import { AddToCartButton, ProductCard } from '../shell/commerce'
-import { usePageTitle } from '../shell/hooks'
+import { addToCartWithFeedback } from '../shell/cartFx'
+import { usePageTitle, useScrolled } from '../shell/hooks'
+import { RecentlyViewed } from '../shell/RecentlyViewed'
 import { BeanMark } from '../shell/Logo'
 
 // ---------------------------------------------------------------------------
@@ -101,7 +103,7 @@ export function ShopPage() {
   const showVoucher = (cat === 'alle' || cat === 'geschenke') && extraFilters === 0
   const showAbo = cat !== 'geschenke' && list.length > 0
 
-  const tiles: { key: string; node: ReactNode }[] = list.map((p) => ({ key: p.id, node: <ProductCard product={p} className="w-full" /> }))
+  const tiles: { key: string; node: ReactNode }[] = list.map((p) => ({ key: p.id, node: <ProductCard product={p} className="w-full" quickView /> }))
   if (showAbo) tiles.splice(Math.min(3, tiles.length), 0, { key: 'abo', node: <AboCard products={products} /> })
   if (showVoucher) tiles.push({ key: 'voucher', node: <VoucherCard /> })
   const count = list.length + (showVoucher ? 1 : 0)
@@ -158,7 +160,7 @@ export function ShopPage() {
                   aria-checked={active}
                   onClick={() => update('kat', c.id === 'alle' ? null : c.id)}
                   className={cn(
-                    'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors',
+                    'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors md:h-10',
                     active ? 'bg-ink text-canvas' : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
                   )}
                 >
@@ -173,7 +175,7 @@ export function ShopPage() {
             onClick={() => setFiltersOpen((v) => !v)}
             aria-expanded={filtersOpen}
             aria-controls="shop-filter"
-            className="relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-sm font-semibold text-ink md:hidden"
+            className="relative inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-sm font-semibold text-ink md:hidden"
           >
             <SlidersHorizontal className="size-4" aria-hidden />
             Filter
@@ -261,6 +263,54 @@ export function ShopPage() {
           )}
         </Container>
       </section>
+
+      <RecentlyViewed className="bg-surface-2/40" />
+      <ShopMobileBar />
+    </>
+  )
+}
+
+/** Mobile: schlanke Leiste „Kaffee finden / Warenkorb“, sobald man ins Sortiment scrollt */
+function ShopMobileBar() {
+  const scrolled = useScrolled(420)
+  const items = useCart((s) => s.items)
+  const setCartOpen = useCart((s) => s.setOpen)
+  const count = useMemo(() => items.reduce((a, i) => a + i.qty, 0), [items])
+  return (
+    <>
+      <div className="h-20 md:hidden" aria-hidden />
+      <nav
+        aria-label="Schnellzugriff"
+        inert={!scrolled}
+        aria-hidden={!scrolled}
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-30 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-[transform,opacity] duration-300 md:hidden',
+          scrolled ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-full opacity-0',
+        )}
+      >
+        <div className="mx-auto grid max-w-md grid-cols-2 gap-1.5 rounded-full border border-line bg-surface/95 p-1.5 shadow-float backdrop-blur-xl">
+          <Link to="/geschmacksfinder" className="inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold text-ink transition-colors hover:bg-surface-2">
+            <Sparkles className="size-4 text-accent-text" aria-hidden />
+            Kaffee finden
+          </Link>
+          <button
+            type="button"
+            onClick={() => setCartOpen(true)}
+            data-cart-target
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-ink text-sm font-semibold text-canvas transition-colors hover:bg-accent-solid hover:text-on-accent"
+          >
+            <ShoppingBag className="size-4" aria-hidden />
+            Warenkorb
+            {count ? (
+              <span className="tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-solid px-1 text-[11px] font-bold text-on-accent">
+                <span className="sr-only">(</span>
+                {count}
+                <span className="sr-only"> Artikel)</span>
+              </span>
+            ) : null}
+          </button>
+        </div>
+      </nav>
     </>
   )
 }
@@ -276,7 +326,7 @@ function SortSelect({ id, value, onChange }: { id: string; value: Sort; onChange
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value as Sort)}
-        className="h-10 cursor-pointer appearance-none rounded-full border border-line bg-surface pr-9 pl-4 text-sm font-medium text-ink transition-colors hover:border-line-strong focus:border-accent focus:outline-none"
+        className="h-11 cursor-pointer appearance-none rounded-full border border-line bg-surface pr-9 pl-4 md:h-10 text-sm font-medium text-ink transition-colors hover:border-line-strong focus:border-accent focus:outline-none"
       >
         {SORTS.map((s) => (
           <option key={s.id} value={s.id}>
@@ -305,7 +355,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium whitespace-nowrap transition-colors',
+        'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors md:h-8 md:px-3',
         active ? 'border-accent bg-accent-soft text-accent-text' : 'border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink',
       )}
     >
@@ -315,15 +365,15 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 
 function VoucherCard() {
-  const add = useCart((s) => s.add)
   const [value, setValue] = useState<(typeof VOUCHER_VALUES)[number]>(50)
   const groupId = useId()
   return (
-    <article className="group flex w-full flex-col">
+    <article className="group flex w-full flex-col" data-fly-root>
       <div className="grain relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-[28px] bg-sidebar p-8 transition-shadow duration-500 group-hover:shadow-lift">
         <div aria-hidden className="absolute -top-20 -right-20 size-72 rounded-full bg-[radial-gradient(closest-side,rgb(196_112_47/0.4),transparent)]" />
         <div
           aria-hidden
+          data-fly-src
           className="relative aspect-[1.58] w-full max-w-[300px] -rotate-6 rounded-2xl bg-[linear-gradient(135deg,#e0924f,#9c4f1c)] p-5 text-[#fff5ea] shadow-[0_30px_50px_-20px_rgba(0,0,0,0.7)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:-rotate-3"
         >
           <div className="flex items-start justify-between">
@@ -354,7 +404,7 @@ function VoucherCard() {
               role="radio"
               aria-checked={v === value}
               onClick={() => setValue(v)}
-              className={cn('tabular h-8 rounded-full px-4 text-sm font-semibold transition-colors', v === value ? 'bg-surface text-ink shadow-soft' : 'text-ink-3 hover:text-ink')}
+              className={cn('tabular h-11 rounded-full px-4 text-sm font-semibold transition-colors md:h-9', v === value ? 'bg-surface text-ink shadow-soft' : 'text-ink-3 hover:text-ink')}
             >
               {v} €
             </button>
@@ -362,7 +412,7 @@ function VoucherCard() {
         </div>
         <div className="mt-auto flex items-center justify-between gap-3 pt-5">
           <span className="text-xs text-ink-3">Der Klassiker unter Geschenken</span>
-          <AddToCartButton compact label={`Gutschein über ${value} € in den Warenkorb`} onAdd={() => add({ kind: 'voucher', value, qty: 1 })} />
+          <AddToCartButton compact label={`Gutschein über ${value} € in den Warenkorb`} onAdd={(el) => addToCartWithFeedback({ kind: 'voucher', value, qty: 1 }, { from: el, label: `Gutschein über ${value} €`, peek: true })} />
         </div>
       </div>
     </article>

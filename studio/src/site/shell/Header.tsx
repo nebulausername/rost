@@ -1,13 +1,15 @@
-import { ArrowRight, ArrowUpRight, Menu, ShoppingBag, Sparkles, X } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { ArrowRight, ArrowUpRight, Check, Menu, Search, ShoppingBag, Sparkles, X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { PlatformIcon } from '../../components/domain'
 import { useCart } from '../../lib/cart'
 import { useStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
 import { Container, OpenBadge, siteButtonClass } from '../components'
+import { CART_ADDED_EVENT, type CartAddedDetail } from './cartFx'
 import { FACEBOOK_URL, INSTAGRAM_URL, readSession, useDialog, usePresence, useScrolled, writeSession } from './hooks'
 import { Logo } from './Logo'
+import { isMac, openSearch } from './searchUi'
 
 const NAV_ITEMS = [
   { to: '/shop', label: 'Shop' },
@@ -42,7 +44,7 @@ export function PromoBar() {
   const internal = promo.link.startsWith('/')
   const linkClass = 'inline-flex items-center gap-1 font-semibold underline decoration-current/40 underline-offset-4 transition hover:decoration-current'
   return (
-    <div className="relative z-50 bg-accent-solid text-on-accent">
+    <aside aria-label="Aktuelle Aktion" className="relative z-50 bg-accent-solid text-on-accent">
       <Container className="flex min-h-10 items-center justify-center gap-x-3 py-2 pr-12 text-center text-[13px] leading-snug sm:pr-12">
         <p>
           <Sparkles className="mr-1.5 -mt-0.5 inline size-3.5 opacity-80" aria-hidden />
@@ -74,12 +76,12 @@ export function PromoBar() {
           writeSession(PROMO_KEY, promo.text)
           setDismissed(promo.text)
         }}
-        className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-80 transition hover:bg-black/10 hover:opacity-100 sm:right-4"
+        className="absolute top-1/2 right-1 flex size-11 -translate-y-1/2 items-center justify-center rounded-full transition hover:bg-black/10 sm:right-3"
         aria-label="Hinweis ausblenden"
       >
         <X className="size-4" aria-hidden />
       </button>
-    </div>
+    </aside>
   )
 }
 
@@ -166,26 +168,18 @@ export function Header() {
             </NavLink>
             <button
               type="button"
-              onClick={() => setCartOpen(true)}
-              aria-label={count ? `Warenkorb öffnen, ${count} Artikel` : 'Warenkorb öffnen (leer)'}
+              onClick={() => openSearch()}
+              aria-label="Suche öffnen"
+              aria-keyshortcuts={isMac() ? '/ Meta+K' : '/ Control+K'}
+              title={`Suchen (/ oder ${isMac() ? '⌘' : 'Strg+'}K)`}
               className={cn(
-                'relative inline-flex size-11 items-center justify-center rounded-full transition-colors',
+                'inline-flex size-11 items-center justify-center rounded-full transition-colors',
                 overHero ? 'text-white hover:bg-white/10' : 'text-ink hover:bg-surface-2',
               )}
             >
-              <ShoppingBag className="size-[22px]" aria-hidden />
-              {count > 0 ? (
-                <span
-                  key={count}
-                  className={cn(
-                    'tabular absolute top-0.5 right-0 inline-flex h-5 min-w-5 animate-pop-in items-center justify-center rounded-full bg-accent-solid px-1 text-[11px] font-bold text-on-accent ring-2',
-                    overHero ? 'ring-sidebar' : 'ring-canvas',
-                  )}
-                >
-                  {count}
-                </span>
-              ) : null}
+              <Search className="size-[21px]" aria-hidden />
             </button>
+            <CartButton overHero={overHero} count={count} onOpen={() => setCartOpen(true)} />
             <button
               type="button"
               onClick={() => setMenuAt(pathname)}
@@ -208,6 +202,111 @@ export function Header() {
 }
 
 // ---------------------------------------------------------------------------
+// Warenkorb-Symbol: hüpft beim Hinzufügen, zählt animiert hoch, kurzer Hinweis darunter
+// ---------------------------------------------------------------------------
+
+function CartButton({ overHero, count, onOpen }: { overHero: boolean; count: number; onOpen: () => void }) {
+  const { pathname } = useLocation()
+  const [bump, setBump] = useState(0)
+  const [announce, setAnnounce] = useState('')
+  const [peek, setPeek] = useState<(CartAddedDetail & { at: string; n: number }) | null>(null)
+  const [hold, setHold] = useState(false)
+  const pathRef = useRef(pathname)
+  useEffect(() => {
+    pathRef.current = pathname
+  }, [pathname])
+
+  useEffect(() => {
+    let n = 0
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<CartAddedDetail>).detail
+      n += 1
+      setBump(n)
+      setAnnounce(`${d.label} liegt jetzt im Warenkorb.`)
+      setPeek(d.peek ? { ...d, at: pathRef.current, n } : null)
+    }
+    window.addEventListener(CART_ADDED_EVENT, on)
+    return () => window.removeEventListener(CART_ADDED_EVENT, on)
+  }, [])
+
+  useEffect(() => {
+    if (!peek || hold) return
+    const t = window.setTimeout(() => setPeek(null), 4200)
+    return () => window.clearTimeout(t)
+  }, [peek, hold])
+
+  const showPeek = peek !== null && peek.at === pathname
+
+  return (
+    <div className="relative" onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)} onFocus={() => setHold(true)} onBlur={() => setHold(false)}>
+      <button
+        type="button"
+        onClick={onOpen}
+        data-cart-target
+        aria-label={count ? `Warenkorb öffnen, ${count} Artikel` : 'Warenkorb öffnen (leer)'}
+        className={cn(
+          'relative inline-flex size-11 items-center justify-center rounded-full transition-colors',
+          overHero ? 'text-white hover:bg-white/10' : 'text-ink hover:bg-surface-2',
+        )}
+      >
+        <ShoppingBag key={bump} className={cn('size-[22px]', bump > 0 && 'animate-[rb-bump_560ms_cubic-bezier(0.3,1.6,0.5,1)]')} aria-hidden />
+        {count > 0 ? (
+          <span
+            className={cn(
+              'tabular absolute top-0.5 right-0 inline-flex h-5 min-w-5 items-center justify-center overflow-hidden rounded-full bg-accent-solid px-1 text-[11px] font-bold text-on-accent ring-2',
+              overHero ? 'ring-sidebar' : 'ring-canvas',
+            )}
+            aria-hidden
+          >
+            <span key={count} className="inline-block animate-[rb-count_420ms_cubic-bezier(0.2,0.8,0.2,1)_both]">
+              {count}
+            </span>
+          </span>
+        ) : null}
+      </button>
+      <p className="sr-only" role="status" aria-live="polite">
+        {announce}
+      </p>
+      {showPeek ? (
+        <div
+          key={peek.n}
+          className="absolute top-full right-0 z-50 mt-2 w-[min(320px,calc(100vw-2rem))] origin-top-right animate-[rb-menu-in_320ms_cubic-bezier(0.2,0.8,0.2,1)_both] rounded-3xl border border-line bg-surface p-4 text-ink shadow-float"
+        >
+          <div className="flex items-start gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success text-white">
+              <Check className="size-4" strokeWidth={3} aria-hidden />
+            </span>
+            <p className="min-w-0 flex-1 pt-0.5 text-sm">
+              <span className="block font-semibold">Im Warenkorb</span>
+              <span className="line-clamp-2 block text-ink-3">{peek.label}</span>
+            </p>
+            <button type="button" onClick={() => setPeek(null)} className="-mt-1.5 -mr-1.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink" aria-label="Hinweis schließen">
+              <X className="size-4" aria-hidden />
+            </button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setPeek(null)
+                onOpen()
+              }}
+              className="inline-flex h-11 items-center justify-center rounded-full border border-line-strong bg-surface px-3 text-sm font-semibold transition-colors hover:border-ink/40"
+            >
+              Ansehen
+            </button>
+            <Link to="/kasse" onClick={() => setPeek(null)} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-accent-solid px-3 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-solid-hover">
+              Zur Kasse
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Mobiles Vollbild-Menü
 // ---------------------------------------------------------------------------
 
@@ -215,6 +314,9 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { mounted, closing } = usePresence(open, 220)
   const ref = useRef<HTMLDivElement>(null)
   const cafes = useStore((s) => s.cafes)
+  const items = useCart((s) => s.items)
+  const setCartOpen = useCart((s) => s.setOpen)
+  const count = useMemo(() => items.reduce((a, i) => a + i.qty, 0), [items])
   useDialog(open, onClose, ref)
   if (!mounted) return null
   return (
@@ -231,17 +333,46 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div aria-hidden className="pointer-events-none absolute -top-40 -right-40 size-[520px] rounded-full bg-[radial-gradient(closest-side,rgb(196_112_47/0.35),transparent)]" />
       <Container className="relative flex h-16 shrink-0 items-center justify-between">
         <Logo onDark />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              onClose()
+              setCartOpen(true)
+            }}
+            aria-label={count ? `Warenkorb öffnen, ${count} Artikel` : 'Warenkorb öffnen (leer)'}
+            className="relative inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+          >
+            <ShoppingBag className="size-[22px]" aria-hidden />
+            {count > 0 ? (
+              <span className="tabular absolute top-0.5 right-0 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-solid px-1 text-[11px] font-bold text-on-accent ring-2 ring-sidebar" aria-hidden>
+                {count}
+              </span>
+            ) : null}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            data-autofocus
+            aria-label="Menü schließen"
+            className="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+          >
+            <X className="size-6" aria-hidden />
+          </button>
+        </div>
+      </Container>
+      <Container className="relative flex flex-1 flex-col pt-4 pb-10">
         <button
           type="button"
-          onClick={onClose}
-          data-autofocus
-          aria-label="Menü schließen"
-          className="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+          onClick={() => {
+            onClose()
+            openSearch()
+          }}
+          className="mb-4 flex h-14 w-full animate-[rb-rise_480ms_cubic-bezier(0.2,0.8,0.2,1)_both] items-center gap-3 rounded-2xl border border-white/15 bg-white/[0.06] px-4 text-left text-[15px] text-sidebar-ink transition-colors hover:bg-white/10"
         >
-          <X className="size-6" aria-hidden />
+          <Search className="size-5 shrink-0 text-sidebar-muted" aria-hidden />
+          <span className="flex-1">Kaffee, Aroma, Anleitung suchen …</span>
         </button>
-      </Container>
-      <Container className="relative flex flex-1 flex-col pt-6 pb-10">
         <nav aria-label="Mobile Navigation">
           <ul>
             {MOBILE_ITEMS.map((n, i) => (

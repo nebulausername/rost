@@ -234,9 +234,11 @@ function Story() {
             >
               <Reveal>
                 <div className="flex items-start justify-between gap-6">
-                  <span className="tabular font-display text-[7rem] leading-[0.8] font-semibold tracking-tighter text-accent/25 md:text-[10rem]" aria-hidden>
-                    0{i + 1}
-                  </span>
+                  <span
+                    className="tabular font-display text-[7rem] leading-[0.8] font-semibold tracking-tighter text-accent/25 before:content-[attr(data-n)] md:text-[10rem]"
+                    data-n={`0${i + 1}`}
+                    aria-hidden
+                  />
                   <svg viewBox="0 0 64 64" className="size-20 shrink-0 text-ink md:size-24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     {c.icon}
                   </svg>
@@ -440,7 +442,7 @@ function Passport({ product: p, roastDate }: { product: Product; roastDate: Date
               </span>
             }
           />
-          <PassField label="Röstdatum" value={<>{formatDe(roastDate, 'd. MMM yyyy')} <span className="text-[11px] font-normal text-black/50">(Beispiel)</span></>} />
+          <PassField label="Röstdatum" value={<>{formatDe(roastDate, 'd. MMM yyyy')} <span className="text-[11px] font-normal text-black/70">(Beispiel)</span></>} />
           <PassField label="Pass-Nr." value={<span className="font-mono text-[13px]">{code}</span>} />
         </dl>
 
@@ -464,7 +466,7 @@ function Passport({ product: p, roastDate }: { product: Product; roastDate: Date
             {p.name} probieren
             <ArrowRight className="size-4" aria-hidden />
           </Link>
-          {p.verify ? <span className="text-[11px] text-black/50">Angaben werden noch mit dem Shop abgeglichen.</span> : null}
+          {p.verify ? <span className="text-[11px] text-black/70">Angaben werden noch mit dem Shop abgeglichen.</span> : null}
         </div>
 
         <div className="mt-8 overflow-hidden rounded-lg bg-black/[0.04] px-3 py-2 font-mono text-[10px] leading-relaxed tracking-[0.12em] whitespace-nowrap text-black/55 sm:text-[11px]" aria-hidden>

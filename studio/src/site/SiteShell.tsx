@@ -6,9 +6,14 @@ import { useCart } from '../lib/cart'
 import { useStore } from '../lib/store'
 import { cn } from '../lib/utils'
 import { CartDrawer } from './shell/CartDrawer'
+import { ConsentManager } from './shell/ConsentManager'
 import { Footer } from './shell/Footer'
 import { Header, PromoBar } from './shell/Header'
 import { captureUtm, SITE_TITLE, useSessionFlag } from './shell/hooks'
+import { QuickViewDialog } from './shell/QuickView'
+import { closeQuickView } from './shell/quickViewStore'
+import { SiteSearch } from './shell/Search'
+import { useSearchShortcuts, useSearchUi } from './shell/searchUi'
 
 // ---------------------------------------------------------------------------
 // Rahmen der öffentlichen Website: Aktionsleiste, Kopfzeile, Warenkorb, Fußzeile.
@@ -42,8 +47,12 @@ const SITE_CSS = `
 @keyframes rb-progress { from { transform: translateX(-100%); } to { transform: translateX(320%); } }
 @keyframes rb-spin-slow { to { transform: rotate(360deg); } }
 @keyframes rb-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes rb-bump { 0% { transform: scale(1); } 30% { transform: scale(1.28) rotate(-9deg); } 60% { transform: scale(0.94) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes rb-count { from { transform: translateY(90%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .rb-marquee:hover .rb-marquee-track, .rb-marquee:focus-within .rb-marquee-track { animation-play-state: paused; }
 .rb-no-scrollbar { scrollbar-width: none; }
+/* Abschnitte weit unten erst rendern, wenn sie in die Nähe kommen (Platz bleibt reserviert) */
+.rb-cv { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 .rb-no-scrollbar::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
   /* globale Regel kürzt nur die Dauer – Endlos-Loops würden dann flackern */
@@ -170,7 +179,7 @@ function PrototypeNotice() {
   return (
     <aside
       aria-label="Hinweis zum Prototyp"
-      className={cn('fixed bottom-3 left-3 z-30 animate-fade-in sm:bottom-4 sm:left-4', pathname.startsWith('/shop/') && 'max-lg:bottom-[88px]')}
+      className={cn('fixed bottom-3 left-3 z-30 animate-fade-in sm:bottom-4 sm:left-4', pathname.startsWith('/shop/') && 'max-lg:bottom-[88px]', pathname === '/shop' && 'max-md:bottom-[84px]')}
     >
       <div className="flex items-center gap-2 rounded-full border border-line bg-surface/90 py-1 pr-1 pl-3 text-xs shadow-lift backdrop-blur-md">
         <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden />
@@ -217,10 +226,14 @@ export function SiteShell() {
     captureUtm(search)
   }, [search])
 
-  // Warenkorb schließt bei Seitenwechsel
+  // Warenkorb, Suche & Schnellansicht schließen bei Seitenwechsel
   useEffect(() => {
     if (useCart.getState().open) useCart.getState().setOpen(false)
+    if (useSearchUi.getState().open) useSearchUi.getState().setOpen(false)
+    closeQuickView()
   }, [pathname])
+
+  useSearchShortcuts()
 
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip bg-canvas text-base text-ink">
@@ -231,6 +244,7 @@ export function SiteShell() {
       >
         Zum Inhalt springen
       </a>
+      <ConsentManager />
       <PromoBar />
       <Header />
       <main id="inhalt" tabIndex={-1} className="flex-1 focus:outline-none">
@@ -238,6 +252,8 @@ export function SiteShell() {
       </main>
       <Footer />
       <CartDrawer />
+      <QuickViewDialog />
+      <SiteSearch />
       <PrototypeNotice />
       <Toaster />
       <RouteProgress />

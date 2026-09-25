@@ -5,6 +5,7 @@ import { useStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
 import { Container, Eyebrow } from '../components'
 import { useDocumentTitle } from '../content/hooks'
+import { openConsentSettings } from '../shell/consent'
 
 // Rechtstexte: bewusst nur Struktur + klar markierte Platzhalter.
 // Keine Firmennamen, Inhaber, Registernummern, Telefonnummern o. Ä. erfinden –
@@ -32,7 +33,7 @@ export function LegalPage() {
 
   return (
     <Container className="py-14 md:py-20">
-      <nav aria-label="Rechtliches" className="mb-10 inline-flex rounded-full border border-line bg-surface p-1">
+      <nav aria-label="Rechtliche Seiten" className="mb-10 inline-flex rounded-full border border-line bg-surface p-1">
         {[
           { to: '/impressum', label: 'Impressum', active: !isPrivacy },
           { to: '/datenschutz', label: 'Datenschutz', active: isPrivacy },
@@ -41,7 +42,7 @@ export function LegalPage() {
             key={t.to}
             to={t.to}
             aria-current={t.active ? 'page' : undefined}
-            className={cn('h-9 rounded-full px-4 text-sm leading-9 font-semibold transition-colors', t.active ? 'bg-sidebar text-sidebar-ink' : 'text-ink-3 hover:text-ink')}
+            className={cn('inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors sm:h-9', t.active ? 'bg-sidebar text-sidebar-ink' : 'text-ink-3 hover:text-ink')}
           >
             {t.label}
           </Link>
@@ -245,7 +246,17 @@ function privacySections(): Section[] {
       body: (
         <>
           <p>
-            Dieser Prototyp setzt keine Tracking-Cookies. Warenkorb und Demo-Daten werden ausschließlich lokal in deinem Browser gespeichert (Local bzw. Session Storage), damit sie einen Seitenwechsel überstehen. Du kannst sie jederzeit über die Browser-Einstellungen löschen.
+            Dieser Prototyp setzt keine Tracking-Cookies. Warenkorb, Cookie-Auswahl, zuletzt angesehene Kaffees und letzte Suchbegriffe werden ausschließlich lokal in deinem Browser gespeichert (Local bzw. Session Storage), damit sie einen Seitenwechsel überstehen. Du kannst sie jederzeit über die Browser-Einstellungen löschen.
+          </p>
+          <p>
+            Deine Einwilligung (Kategorien Statistik und Marketing, standardmäßig aus) speichern wir mit Datum und Version. Du kannst sie jederzeit ändern oder widerrufen:{' '}
+            <button
+              type="button"
+              onClick={openConsentSettings}
+              className="inline-flex min-h-11 items-center rounded-full border border-line-strong bg-surface px-4 align-middle text-sm font-semibold text-ink transition-colors hover:border-ink/40"
+            >
+              Cookie-Einstellungen öffnen
+            </button>
           </p>
           <p>
             Für die Live-Website: <Placeholder>[Eingesetzte Cookies, Consent-Tool, Kategorien und Rechtsgrundlagen beschreiben]</Placeholder>

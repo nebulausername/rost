@@ -22,13 +22,13 @@ import {
 } from 'lucide-react'
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { create } from 'zustand'
 import { useStore } from '../../lib/store'
 import { cn } from '../../lib/utils'
 import { CoffeeBag } from '../components'
 import { GUIDES } from '../content/guides'
 import { BrewIcon } from '../content/icons'
 import { openConsentSettings } from './consent'
+import { isMac, useSearchUi } from './searchUi'
 import { stageTint, useDialog, usePresence } from './hooks'
 import { buildIndex, GROUP_LABELS, highlightRanges, searchDocs, type PageIcon, type SearchDoc, type SearchGroup, type SearchHit } from './searchIndex'
 import { recentSearches } from './storage'
@@ -37,22 +37,6 @@ import { recentSearches } from './storage'
 // Website-Suche: Overlay im Stil einer Befehlspalette.
 // Öffnen per Lupe in der Kopfzeile, „/“ oder ⌘K / Strg+K.
 // ---------------------------------------------------------------------------
-
-interface SearchUi {
-  open: boolean
-  query: string
-  setOpen: (open: boolean, query?: string) => void
-  setQuery: (q: string) => void
-}
-
-export const useSearchUi = create<SearchUi>()((set) => ({
-  open: false,
-  query: '',
-  setOpen: (open, query) => set((s) => ({ open, query: query ?? s.query })),
-  setQuery: (query) => set({ query }),
-}))
-
-export const openSearch = (query?: string) => useSearchUi.getState().setOpen(true, query)
 
 const POPULAR = ['schokoladig', 'fruchtig', 'Siebträger', 'V60', 'mild', 'Latte Art', 'Geschenk', 'Öffnungszeiten']
 
@@ -80,37 +64,9 @@ const PAGE_ICONS: Record<PageIcon, LucideIcon> = {
 }
 
 const GROUP_ORDER: SearchGroup[] = ['coffee', 'guide', 'workshop', 'page']
-const GROUP_LIMIT: Record<SearchGroup, number> = { coffee: 6, guide: 4, workshop: 4, page: 5 }
-
-export const isMac = () => typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
-
-function isTypingTarget(t: EventTarget | null) {
-  if (!(t instanceof HTMLElement)) return false
-  return t.isContentEditable || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT'
-}
-
-/** Tastenkürzel der Website: „/“ (außer beim Tippen) und ⌘K / Strg+K */
-export function useSearchShortcuts() {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.isComposing) return
-      const ui = useSearchUi.getState()
-      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        ui.setOpen(!ui.open)
-        return
-      }
-      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !ui.open && !isTypingTarget(e.target)) {
-        // nicht, wenn gerade ein anderer Dialog offen ist
-        if (document.querySelector('[aria-modal="true"]')) return
-        e.preventDefault()
-        ui.setOpen(true)
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [])
-}
+const GROUP_LIMIT: Record<SearchGroup, number> = { coffee: 6, guide: 4, workshop: 4, page: 4 }
+const GROUP_BIAS: Record<SearchGroup, number> = { coffee: 3, guide: 0, workshop: 0, page: -2 }
+const groupRank = (g: SearchGroup, score: number) => score + GROUP_BIAS[g]
 
 // ---------------------------------------------------------------------------
 // Overlay
@@ -179,7 +135,8 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
     // Gruppen nach bestem Treffer sortieren, bei Gleichstand feste Reihenfolge
     return GROUP_ORDER.filter((k) => g.has(k))
       .map((k) => ({ key: k, hits: g.get(k) ?? [] }))
-      .sort((a, b) => b.hits[0].score - a.hits[0].score || GROUP_ORDER.indexOf(a.key) - GROUP_ORDER.indexOf(b.key))
+      // Kaffees leicht bevorzugen, Seiten leicht nach hinten
+      .sort((a, b) => groupRank(b.key, b.hits[0].score) - groupRank(a.key, a.hits[0].score) || GROUP_ORDER.indexOf(a.key) - GROUP_ORDER.indexOf(b.key))
   }, [hits])
 
   const sections: { key: string; label: ReactNode; entries: Entry[]; action?: ReactNode }[] = useMemo(() => {
@@ -192,6 +149,10 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   }, [trimmed, grouped, recent])
 
   const flat = useMemo(() => sections.flatMap((s) => s.entries), [sections])
+  const indexed = useMemo(() => {
+    let i = 0
+    return sections.map((s) => ({ ...s, rows: s.entries.map((entry) => ({ entry, i: i++ })) }))
+  }, [sections])
   const activeIndex = Math.min(active, Math.max(0, flat.length - 1))
 
   // Auswahl bei neuer Eingabe zurücksetzen (Render-Phase statt Effekt)
@@ -254,7 +215,6 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   }
 
   const resultCount = hits.length
-  let running = -1
 
   return (
     <>
@@ -316,7 +276,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
           <EmptyState query={trimmed} onPick={(q) => setQuery(q)} />
         ) : (
           <div role="listbox" id={listId} aria-label={trimmed ? 'Suchergebnisse' : 'Vorschläge'}>
-            {sections.map((s) => {
+            {indexed.map((s) => {
               const headingId = `${listId}-${s.key}`
               const chips = !trimmed && s.entries.every((e) => e.type === 'query')
               return (
@@ -339,9 +299,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                     ) : null}
                   </div>
                   <div className={cn(chips ? 'flex flex-wrap gap-2 px-2 pb-1' : 'space-y-0.5')}>
-                    {s.entries.map((entry) => {
-                      running += 1
-                      const i = running
+                    {s.rows.map(({ entry, i }) => {
                       const isActive = i === activeIndex
                       const common = {
                         id: optId(i),

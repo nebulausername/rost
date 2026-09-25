@@ -17,7 +17,7 @@ export function BeanMark({ className }: { className?: string }) {
 
 export function Logo({ className, onDark }: { className?: string; onDark?: boolean }) {
   return (
-    <Link to="/" className={cn('group inline-flex items-center gap-2.5 rounded-full', className)} aria-label="Röstbrüder – zur Startseite">
+    <Link to="/" className={cn('group inline-flex min-h-11 items-center gap-2.5 rounded-full', className)} aria-label="Röstbrüder – zur Startseite">
       <BeanMark className="transition-transform duration-500 group-hover:rotate-[20deg]" />
       <span className={cn('font-display text-[22px] leading-none font-semibold tracking-tight transition-colors', onDark ? 'text-sidebar-ink' : 'text-ink')}>
         Röstbrüder

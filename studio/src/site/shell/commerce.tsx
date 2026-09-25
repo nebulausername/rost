@@ -1,12 +1,13 @@
-import { Check, Gift, Minus, Plus, Repeat, ShoppingBag } from 'lucide-react'
+import { Check, Eye, Gift, Minus, Plus, Repeat, ShoppingBag } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { useCart } from '../../lib/cart'
 import type { CartItem, Product } from '../../lib/types'
 import { cn } from '../../lib/utils'
 import { CoffeeBag, NoteChips, RoastMeter } from '../components'
 import { price } from '../lib'
+import { addToCartWithFeedback } from './cartFx'
 import { stageTint, useAddedFeedback } from './hooks'
+import { openQuickView } from './quickViewStore'
 
 // ---------------------------------------------------------------------------
 // Commerce-Bausteine, die Startseite, Shop, Produktseite & Warenkorb teilen
@@ -25,7 +26,8 @@ export function AddToCartButton({
   compact,
   label,
 }: {
-  onAdd: () => void
+  /** bekommt den Button (Startpunkt für die Flug-Animation) */
+  onAdd: (el: HTMLButtonElement) => void
   disabled?: boolean
   className?: string
   children?: ReactNode
@@ -39,13 +41,13 @@ export function AddToCartButton({
       type="button"
       disabled={disabled}
       aria-label={label}
-      onClick={() => {
-        onAdd()
+      onClick={(e) => {
+        onAdd(e.currentTarget)
         flash()
       }}
       className={cn(
         'relative z-10 inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.97] disabled:pointer-events-none',
-        compact ? 'h-10 px-4 text-sm' : 'h-12 px-6 text-[15px]',
+        compact ? 'h-11 px-4 text-sm' : 'h-12 px-6 text-[15px]',
         disabled
           ? 'bg-surface-2 text-ink-3'
           : added
@@ -55,13 +57,13 @@ export function AddToCartButton({
       )}
     >
       {disabled ? null : added ? <Check className="size-4" aria-hidden /> : <ShoppingBag className="size-4" aria-hidden />}
-      <span>{disabled ? 'Ausverkauft' : added ? 'Hinzugefügt' : children}</span>
+      <span className="min-w-0 truncate">{disabled ? 'Ausverkauft' : added ? 'Im Warenkorb' : children}</span>
     </button>
   )
 }
 
 /** Runder Schnell-Kauf-Button (Tüte + Plus) */
-export function IconAddButton({ onAdd, disabled, label }: { onAdd: () => void; disabled?: boolean; label: string }) {
+export function IconAddButton({ onAdd, disabled, label }: { onAdd: (el: HTMLButtonElement) => void; disabled?: boolean; label: string }) {
   const [added, flash] = useAddedFeedback()
   return (
     <button
@@ -69,8 +71,8 @@ export function IconAddButton({ onAdd, disabled, label }: { onAdd: () => void; d
       disabled={disabled}
       aria-label={label}
       title={disabled ? 'Ausverkauft' : 'In den Warenkorb'}
-      onClick={() => {
-        onAdd()
+      onClick={(e) => {
+        onAdd(e.currentTarget)
         flash()
       }}
       className={cn(
@@ -96,6 +98,7 @@ export function ProductCard({
   headingLevel = 'h3',
   priority,
   addVariant = 'full',
+  quickView,
 }: {
   product: Product
   className?: string
@@ -106,13 +109,16 @@ export function ProductCard({
   priority?: boolean
   /** „icon“ = runder Warenkorb-Button für enge Raster */
   addVariant?: 'full' | 'icon'
+  /** „Schnellansicht“-Button auf der Bühne */
+  quickView?: boolean
 }) {
-  const add = useCart((s) => s.add)
   const Heading = headingLevel
   const isGift = product.kind === 'gift' || product.kind === 'voucher'
   const badge = KIND_BADGE[product.kind]
+  const quickAdd = (el: HTMLButtonElement) =>
+    addToCartWithFeedback({ kind: 'product', productId: product.id, size: '250', grind: 'bohne', qty: 1 }, { from: el, label: `${product.name}${isGift ? '' : ' (250 g, ganze Bohne)'}`, peek: true })
   return (
-    <article className={cn('group relative flex flex-col', className)}>
+    <article className={cn('group relative flex flex-col', className)} data-fly-root>
       <div
         className={cn(
           'relative aspect-[4/5] overflow-hidden rounded-[28px] transition-shadow duration-500 group-hover:shadow-lift',
@@ -128,8 +134,22 @@ export function ProductCard({
             priority ? 'w-[60%]' : 'w-[56%]',
           )}
         >
-          <CoffeeBag product={product} />
+          <div data-fly-src>
+            <CoffeeBag product={product} />
+          </div>
         </div>
+        {quickView ? (
+          <button
+            type="button"
+            onClick={() => openQuickView(product.slug)}
+            aria-haspopup="dialog"
+            aria-label={`Schnellansicht: ${product.name}`}
+            className="absolute right-3 bottom-3 z-10 inline-flex h-11 items-center gap-2 rounded-full bg-surface/90 px-4 text-sm font-semibold text-ink shadow-soft backdrop-blur transition-[opacity,transform,background-color] duration-300 hover:bg-surface focus-visible:translate-y-0 focus-visible:opacity-100 pointer-fine:translate-y-2 pointer-fine:opacity-0 pointer-fine:group-hover:translate-y-0 pointer-fine:group-hover:opacity-100"
+          >
+            <Eye className="size-4" aria-hidden />
+            <span className="max-[380px]:sr-only">Schnellansicht</span>
+          </button>
+        ) : null}
         <div className="absolute top-4 left-4 flex flex-wrap gap-1.5">
           {!product.available ? <span className="rounded-full bg-ink px-2.5 py-1 text-[11px] font-semibold text-canvas">Gerade ausverkauft</span> : null}
           {badge ? <span className="rounded-full bg-surface/85 px-2.5 py-1 text-[11px] font-semibold text-ink backdrop-blur">{badge}</span> : null}
@@ -161,14 +181,14 @@ export function ProductCard({
             <IconAddButton
               disabled={!product.available}
               label={product.available ? `${product.name} (250 g, ganze Bohne) in den Warenkorb` : `${product.name} ist ausverkauft`}
-              onAdd={() => add({ kind: 'product', productId: product.id, size: '250', grind: 'bohne', qty: 1 })}
+              onAdd={(el) => quickAdd(el)}
             />
           ) : (
             <AddToCartButton
               compact
               disabled={!product.available}
               label={product.available ? `${product.name} (250 g, ganze Bohne) in den Warenkorb` : `${product.name} ist ausverkauft`}
-              onAdd={() => add({ kind: 'product', productId: product.id, size: '250', grind: 'bohne', qty: 1 })}
+              onAdd={(el) => quickAdd(el)}
             />
           )}
         </div>

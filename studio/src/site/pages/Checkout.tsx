@@ -6,9 +6,10 @@ import { useStore } from '../../lib/store'
 import type { Order } from '../../lib/types'
 import { cn, uid } from '../../lib/utils'
 import { Container, siteButtonClass } from '../components'
+import { fold } from '../shell/searchIndex'
 import { orderNumber, price } from '../lib'
 import { CartThumb, FreeShippingBar } from '../shell/commerce'
-import { currentUtmSource, isEmail, usePageTitle } from '../shell/hooks'
+import { currentUtmSource, isEmail, readSession, usePageTitle, writeSession } from '../shell/hooks'
 
 // ---------------------------------------------------------------------------
 // Kasse – einseitig, Validierung inline, Bestellung landet im Studio
@@ -30,6 +31,52 @@ interface FormState {
 }
 
 const FIELD_ORDER: FieldKey[] = ['name', 'email', 'street', 'zip', 'city']
+
+const FIELD_LABELS: Record<FieldKey, string> = { name: 'Name', email: 'E-Mail', street: 'Straße & Hausnummer', zip: 'PLZ', city: 'Ort' }
+
+/** Kontakt für die laufende Sitzung merken (nur Name & E-Mail, nur sessionStorage) */
+const CONTACT_KEY = 'rb-checkout-contact'
+
+function readContact(): { name: string; email: string } | null {
+  try {
+    const raw = readSession(CONTACT_KEY)
+    if (!raw) return null
+    const v = JSON.parse(raw) as { name?: unknown; email?: unknown }
+    const name = typeof v.name === 'string' ? v.name : ''
+    const email = typeof v.email === 'string' ? v.email : ''
+    return name || email ? { name, email } : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Kleine PLZ-Tabelle (Thüringen & große Städte) – nur als Vorschlag für den Ort.
+ * Bereiche sind bewusst grob; das Feld bleibt immer frei editierbar.
+ */
+const ZIP_RANGES: [number, number, string][] = [
+  [99423, 99427, 'Weimar'],
+  [99084, 99099, 'Erfurt'],
+  [7743, 7751, 'Jena'],
+  [4103, 4357, 'Leipzig'],
+  [10115, 14199, 'Berlin'],
+  [99510, 99510, 'Apolda'],
+  [99867, 99867, 'Gotha'],
+  [99817, 99817, 'Eisenach'],
+  [7545, 7557, 'Gera'],
+  [6108, 6132, 'Halle (Saale)'],
+  [1067, 1328, 'Dresden'],
+  [20095, 22769, 'Hamburg'],
+  [80331, 81929, 'München'],
+  [50667, 51149, 'Köln'],
+  [60306, 60599, 'Frankfurt am Main'],
+]
+
+function cityForZip(zip: string): string | null {
+  if (!/^\d{5}$/.test(zip)) return null
+  const n = Number(zip)
+  return ZIP_RANGES.find(([a, b]) => n >= a && n <= b)?.[2] ?? null
+}
 
 const PAYMENTS: { id: Payment; label: string; hint: string; icon: LucideIcon }[] = [
   { id: 'paypal', label: 'PayPal', hint: 'Weiterleitung zu PayPal', icon: Wallet },
@@ -56,8 +103,8 @@ interface Done {
 }
 
 export function CheckoutPage() {
-  usePageTitle('Kasse')
   const [done, setDone] = useState<Done | null>(null)
+  usePageTitle(done ? 'Bestellung bestätigt' : 'Kasse')
   const items = useCart((s) => s.items)
   if (done) return <Confirmation done={done} />
   if (!items.length) return <EmptyCheckout />
@@ -77,9 +124,26 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
   const subscribe = useStore((s) => s.subscribe)
   const totals = useMemo(() => cartTotals(items, products), [items, products])
 
-  const [form, setForm] = useState<FormState>({ name: '', email: '', street: '', zip: '', city: '', delivery: 'versand', payment: 'paypal', newsletter: false })
+  const [restored, setRestored] = useState(() => readContact() !== null)
+  const [form, setForm] = useState<FormState>(() => {
+    const c = readContact()
+    return { name: c?.name ?? '', email: c?.email ?? '', street: '', zip: '', city: '', delivery: 'versand', payment: 'paypal', newsletter: false }
+  })
+  const [autoCity, setAutoCity] = useState<string | null>(null)
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const summaryRef = useRef<HTMLDivElement>(null)
+
+  // Name & E-Mail für diese Sitzung merken (z. B. wenn man noch mal in den Shop springt)
+  useEffect(() => {
+    if (form.name || form.email) writeSession(CONTACT_KEY, JSON.stringify({ name: form.name, email: form.email }))
+  }, [form.name, form.email])
+
+  // Nach einem Absendeversuch mit Fehlern: Fokus auf die Fehlerübersicht
+  useEffect(() => {
+    if (attempt) summaryRef.current?.focus()
+  }, [attempt])
   const [pending, setPending] = useState(false)
   const [showItems, setShowItems] = useState(false)
   const timer = useRef<number | undefined>(undefined)
@@ -95,14 +159,40 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => ({ ...f, [k]: v }))
   const blur = (k: FieldKey) => () => setTouched((t) => ({ ...t, [k]: true }))
+  const errorKeys = FIELD_ORDER.filter((k) => errors[k])
+  const zipCity = cityForZip(form.zip)
+  const cityIsAuto = autoCity !== null && form.city === autoCity
+
+  const onZip = (raw: string) => {
+    const zip = raw.replace(/[^\d]/g, '').slice(0, 5)
+    const suggestion = cityForZip(zip)
+    setForm((f) => {
+      // Ort nur vorschlagen, wenn er leer ist oder selbst schon ein Vorschlag war
+      const fill = suggestion && (!f.city.trim() || f.city === autoCity)
+      return { ...f, zip, city: fill ? suggestion : f.city }
+    })
+    if (suggestion && (!form.city.trim() || form.city === autoCity)) setAutoCity(suggestion)
+  }
+
+  const forgetContact = () => {
+    writeSession(CONTACT_KEY, '')
+    setForm((f) => ({ ...f, name: '', email: '' }))
+    setRestored(false)
+    document.getElementById('co-name')?.focus()
+  }
+
+  const focusField = (k: FieldKey) => {
+    const el = document.getElementById(`co-${k}`)
+    el?.focus({ preventScroll: true })
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (pending) return
     setSubmitted(true)
-    const first = FIELD_ORDER.find((k) => errors[k])
-    if (first) {
-      document.getElementById(`co-${first}`)?.focus()
+    if (errorKeys.length) {
+      setAttempt((n) => n + 1)
       return
     }
     setPending(true)
@@ -123,45 +213,22 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
       }
       placeOrder(order)
       if (form.newsletter) subscribe(form.email, 'Kasse')
+      writeSession(CONTACT_KEY, '')
       clear()
       window.scrollTo(0, 0)
       onDone({ order, firstName: form.name.trim().split(/\s+/)[0] ?? '', pickup })
     }, 700)
   }
 
-  const steps = [
-    { label: 'Kontakt', ok: contactOk },
-    { label: 'Lieferung', ok: contactOk && deliveryOk },
-    { label: 'Zahlung', ok: contactOk && deliveryOk },
-  ]
-
   return (
     <Container className="pt-8 pb-20 md:pt-12 md:pb-28">
-      <Link to="/shop" className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-3 transition-colors hover:text-ink">
+      <Link to="/shop" className="-ml-2 inline-flex h-11 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-ink-3 transition-colors hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden />
         Weiter einkaufen
       </Link>
-      <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <div className="mt-2 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <h1 className="font-display text-5xl leading-none font-semibold tracking-[-0.03em] text-ink md:text-6xl">Kasse</h1>
-        <ol className="flex items-center gap-1.5 text-sm sm:gap-2" aria-label="Fortschritt">
-          {steps.map((s, i) => (
-            <li key={s.label} className="flex items-center gap-2">
-              <span
-                className={cn(
-                  'tabular flex size-7 items-center justify-center rounded-full text-xs font-bold transition-colors',
-                  s.ok ? 'bg-success text-white' : 'bg-surface-2 text-ink-2',
-                )}
-              >
-                {s.ok ? <Check className="size-3.5" aria-hidden /> : i + 1}
-              </span>
-              <span className={cn('font-medium', s.ok ? 'text-ink' : 'text-ink-3')}>
-                {s.label}
-                {s.ok ? <span className="sr-only"> (vollständig)</span> : null}
-              </span>
-              {i < steps.length - 1 ? <span className="mx-0.5 h-px w-3 bg-line-strong sm:mx-1 sm:w-10" aria-hidden /> : null}
-            </li>
-          ))}
-        </ol>
+        <CheckoutSteps current={2} onCart={() => setCartOpen(true)} />
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
@@ -240,7 +307,39 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
         </aside>
 
         <form onSubmit={onSubmit} noValidate className="space-y-6 lg:col-start-1 lg:row-start-1" aria-describedby="co-demo">
+          {submitted && errorKeys.length ? (
+            <div ref={summaryRef} tabIndex={-1} role="alert" aria-labelledby="co-errors-title" className="animate-fade-in rounded-[28px] border-2 border-danger/40 bg-danger-soft p-5 focus:outline-none focus-visible:ring-4 focus-visible:ring-danger/20 sm:p-6">
+              <h2 id="co-errors-title" className="font-display text-xl font-semibold text-danger">
+                Fast geschafft – {errorKeys.length === 1 ? 'eine Angabe fehlt noch' : `${errorKeys.length} Angaben fehlen noch`}:
+              </h2>
+              <ul className="mt-3 space-y-1">
+                {errorKeys.map((k) => (
+                  <li key={k}>
+                    <a
+                      href={`#co-${k}`}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        focusField(k)
+                      }}
+                      className="inline-block py-1 text-[15px] leading-snug text-danger underline decoration-danger/40 underline-offset-2 hover:decoration-danger"
+                    >
+                      <strong className="font-semibold">{FIELD_LABELS[k]}:</strong> {errors[k]}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <Section n={1} title="Kontakt" done={contactOk}>
+            {restored && (form.name || form.email) ? (
+              <p className="-mt-1 mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-2">
+                <Check className="size-4 text-success" aria-hidden />
+                Aus dieser Sitzung übernommen.
+                <button type="button" onClick={forgetContact} className="inline-flex min-h-9 items-center font-semibold text-accent-text underline-offset-2 hover:underline">
+                  Nicht du? Felder leeren
+                </button>
+              </p>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField id="co-name" label="Vor- und Nachname" value={form.name} onChange={(v) => set('name', v)} onBlur={blur('name')} error={show('name')} autoComplete="name" />
               <TextField
@@ -296,7 +395,7 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
                   id="co-zip"
                   label="PLZ"
                   value={form.zip}
-                  onChange={(v) => set('zip', v.replace(/[^\d]/g, '').slice(0, 5))}
+                  onChange={onZip}
                   onBlur={blur('zip')}
                   error={show('zip')}
                   autoComplete="postal-code"
@@ -312,6 +411,25 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
                   error={show('city')}
                   autoComplete="address-level2"
                   className="sm:col-span-2"
+                  hint={
+                    cityIsAuto ? (
+                      <>Aus der PLZ ergänzt – bitte kurz prüfen.</>
+                    ) : zipCity && form.city.trim() && fold(form.city) !== fold(zipCity) ? (
+                      <>
+                        Zur PLZ passt eher{' '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            set('city', zipCity)
+                            setAutoCity(zipCity)
+                          }}
+                          className="font-semibold text-accent-text underline underline-offset-2"
+                        >
+                          {zipCity} übernehmen
+                        </button>
+                      </>
+                    ) : undefined
+                  }
                 />
               </div>
             )}
@@ -373,9 +491,12 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
               </Link>{' '}
               gelesen zu haben. Demo: Es wird nichts belastet.
             </p>
-            {submitted && Object.keys(errors).length ? (
-              <p className="mt-3 text-center text-sm font-medium text-danger" role="alert">
-                Fast geschafft – bitte prüf die markierten Felder.
+            {submitted && errorKeys.length ? (
+              <p className="mt-3 text-center text-sm font-medium text-danger">
+                Fast geschafft – oben siehst du, was noch fehlt.{' '}
+                <button type="button" onClick={() => summaryRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })} className="font-semibold underline underline-offset-2">
+                  Zur Übersicht
+                </button>
               </p>
             ) : null}
           </div>
@@ -383,6 +504,47 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
 
       </div>
     </Container>
+  )
+}
+
+function CheckoutSteps({ current, onCart, className }: { current: 1 | 2 | 3; onCart?: () => void; className?: string }) {
+  const steps = ['Warenkorb', 'Daten', 'Bestätigung']
+  return (
+    <nav aria-label="Bestellfortschritt" className={cn('w-full md:w-auto', className)}>
+      <ol className="flex items-center text-[13px] sm:text-sm">
+        {steps.map((label, i) => {
+          const n = i + 1
+          const done = n < current || (current === 3 && n === 3)
+          const isCurrent = n === current
+          return (
+            <li key={label} className={cn('flex items-center', i < steps.length - 1 && 'flex-1 md:flex-none')} aria-current={isCurrent ? 'step' : undefined}>
+              <span className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    'tabular flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors',
+                    done ? 'bg-success text-white' : isCurrent ? 'bg-ink text-canvas' : 'bg-surface-2 text-ink-3',
+                  )}
+                  aria-hidden
+                >
+                  {done ? <Check className="size-3.5" strokeWidth={3} /> : n}
+                </span>
+                {n === 1 && onCart ? (
+                  <button type="button" onClick={onCart} className="-mx-1.5 inline-flex min-h-11 items-center rounded-full px-1.5 font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
+                    {label}
+                  </button>
+                ) : (
+                  <span className={cn('font-medium whitespace-nowrap', isCurrent || done ? 'text-ink' : 'text-ink-3')}>{label}</span>
+                )}
+                <span className="sr-only">{done ? ' (erledigt)' : isCurrent ? ' (aktueller Schritt)' : ''}</span>
+              </span>
+              {i < steps.length - 1 ? (
+                <span aria-hidden className={cn('mx-2 h-0.5 min-w-3 flex-1 rounded-full sm:mx-3 md:w-10 md:flex-none', n < current ? 'bg-success' : 'bg-line-strong')} />
+              ) : null}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
   )
 }
 
@@ -418,7 +580,7 @@ function TextField({
   value: string
   onChange: (v: string) => void
   error?: string
-  hint?: string
+  hint?: ReactNode
   className?: string
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'id' | 'className'>) {
   const msgId = `${id}-msg`
@@ -444,7 +606,7 @@ function TextField({
           {error}
         </p>
       ) : hint ? (
-        <p id={msgId} className="mt-1.5 text-xs text-ink-3">
+        <p id={msgId} className="mt-1.5 animate-fade-in text-xs text-ink-3">
           {hint}
         </p>
       ) : null}
@@ -537,7 +699,8 @@ function Confirmation({ done }: { done: Done }) {
   return (
     <section aria-labelledby={titleId} className="relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 size-[640px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(196_112_47/0.18),transparent)]" />
-      <Container className="relative flex flex-col items-center pt-16 pb-24 text-center md:pt-24">
+      <Container className="relative flex flex-col items-center pt-10 pb-24 text-center md:pt-14">
+        <CheckoutSteps current={3} className="mb-12 md:mb-16" />
         <div className="relative flex size-24 animate-pop-in items-center justify-center rounded-full bg-success text-white shadow-[0_20px_40px_-16px_rgb(79_112_73/0.8)]">
           <Check className="size-11" strokeWidth={2.5} aria-hidden />
           <span className="rb-loop absolute inset-0 animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_2] rounded-full bg-success/30" aria-hidden />

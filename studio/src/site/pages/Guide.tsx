@@ -28,7 +28,7 @@ function NotFound() {
       <p className="mt-3 max-w-md text-ink-2">Die Seite gibt es nicht (mehr). Aber keine Sorge – hier sind alle Methoden auf einen Blick.</p>
       <div className="mt-8 flex flex-wrap justify-center gap-2">
         {GUIDES.map((g) => (
-          <Link key={g.slug} to={`/anleitungen/${g.slug}`} className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface pr-4 pl-2 text-sm font-medium text-ink-2 hover:border-accent hover:text-ink">
+          <Link key={g.slug} to={`/anleitungen/${g.slug}`} className="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface pr-4 pl-2 text-sm font-medium text-ink-2 hover:border-accent hover:text-ink">
             <BrewIcon name={g.icon} className="size-7" />
             {g.title}
           </Link>
@@ -61,8 +61,8 @@ function GuideView({ guide: g }: { guide: BrewGuide }) {
       <section className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px] bg-[radial-gradient(55%_65%_at_80%_0%,color-mix(in_oklab,var(--c)_22%,transparent),transparent_70%)]" />
         <Container className="pt-8 pb-14 md:pt-10 md:pb-20">
-          <nav aria-label="Brotkrumen" className="mb-10 flex items-center gap-1.5 text-sm text-ink-3">
-            <Link to="/anleitungen" className="inline-flex items-center gap-1.5 hover:text-ink">
+          <nav aria-label="Brotkrümel" className="mb-8 flex items-center gap-1.5 text-sm text-ink-3">
+            <Link to="/anleitungen" className="inline-flex min-h-11 items-center gap-1.5 hover:text-ink">
               <ArrowLeft className="size-4" aria-hidden />
               Anleitungen
             </Link>
@@ -392,7 +392,7 @@ function BrewTimer({ guide: g, dose, setDose }: { guide: BrewGuide; dose: number
               </span>
             </div>
             <div className="mt-3 flex items-center gap-3">
-              <button type="button" disabled={running || dose <= g.doseRange[0]} onClick={() => setDose(Math.max(g.doseRange[0], dose - 1))} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-40" aria-label="Weniger Kaffee">
+              <button type="button" disabled={running || dose <= g.doseRange[0]} onClick={() => setDose(Math.max(g.doseRange[0], dose - 1))} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-40 sm:size-9" aria-label="Weniger Kaffee">
                 <Minus className="size-4" aria-hidden />
               </button>
               <input
@@ -405,9 +405,9 @@ function BrewTimer({ guide: g, dose, setDose }: { guide: BrewGuide; dose: number
                 disabled={running}
                 onChange={(e) => setDose(Number(e.target.value))}
                 aria-valuetext={`${dose} Gramm Kaffee`}
-                className="w-full accent-[var(--accent)] disabled:opacity-50"
+                className="h-11 w-full cursor-pointer accent-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <button type="button" disabled={running || dose >= g.doseRange[1]} onClick={() => setDose(Math.min(g.doseRange[1], dose + 1))} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-40" aria-label="Mehr Kaffee">
+              <button type="button" disabled={running || dose >= g.doseRange[1]} onClick={() => setDose(Math.min(g.doseRange[1], dose + 1))} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-40 sm:size-9" aria-label="Mehr Kaffee">
                 <Plus className="size-4" aria-hidden />
               </button>
             </div>

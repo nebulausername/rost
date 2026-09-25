@@ -418,7 +418,7 @@ function fieldScore(text: string, term: string, w: number) {
     const atWord = idx === 0 || text[idx - 1] === ' '
     return atWord ? w : w * 0.5
   }
-  if (term.length >= 4 && !term.includes(' ')) {
+  if (term.length >= 5 && !term.includes(' ')) {
     for (const word of words(text)) {
       if (word.length < 3) continue
       // Tippfehler: ganzes Wort oder gleich langer Wortanfang
@@ -444,8 +444,9 @@ export function searchDocs(docs: SearchDoc[], query: string): SearchHit[] {
       for (const exp of expansions(token)) {
         const tagNote = doc.tags.get(exp)
         if (tagNote !== undefined) {
-          best = Math.max(best, 6)
-          if (!reason && TAG_LABELS[exp]) reason = `passt zu „${TAG_LABELS[exp]}“${tagNote ? ` · ${tagNote}` : ''}`
+          // Facetten-Treffer (Geschmack, Zubereitung) zählen bei Kaffees besonders
+          best = Math.max(best, doc.group === 'coffee' ? 9 : 6)
+          if (!reason) reason = TAG_LABELS[exp] ? `passt zu „${TAG_LABELS[exp]}“${tagNote ? ` · ${tagNote}` : ''}` : tagNote || null
         }
         let fs = 0
         for (const f of doc.fields) fs = Math.max(fs, fieldScore(f.text, exp, f.w) * 0.8)

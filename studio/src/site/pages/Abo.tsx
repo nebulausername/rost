@@ -115,8 +115,11 @@ function Benefits() {
     { icon: <Sparkles className="size-5" />, title: 'Saisonale Überraschungen', text: 'In der Röster-Auswahl landen auch limitierte Saisonkaffees.' },
   ]
   return (
-    <section aria-label="Vorteile" className="pb-20 md:pb-28">
+    <section aria-labelledby="abo-benefits" className="pb-20 md:pb-28">
       <Container>
+        <h2 id="abo-benefits" className="sr-only">
+          Deine Vorteile im Abo
+        </h2>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((it) => (
             <li key={it.title} className="rounded-3xl border border-line bg-surface p-6">
@@ -273,13 +276,13 @@ function Configurator() {
                   <p className="text-sm text-ink-2">
                     Unsicher? Du trinkst etwa
                     <span className="mx-2 inline-flex items-center gap-1 align-middle">
-                      <button type="button" onClick={() => setWantCups(Math.max(1, wantCups - 1))} className="flex size-7 items-center justify-center rounded-full border border-line bg-surface hover:border-line-strong" aria-label="Weniger Tassen">
+                      <button type="button" onClick={() => setWantCups(Math.max(1, wantCups - 1))} className="flex size-11 items-center justify-center rounded-full border border-line bg-surface hover:border-line-strong sm:size-8" aria-label="Weniger Tassen">
                         <Minus className="size-3.5" aria-hidden />
                       </button>
                       <span className="tabular w-6 text-center font-semibold text-ink" aria-live="polite">
                         {wantCups}
                       </span>
-                      <button type="button" onClick={() => setWantCups(Math.min(8, wantCups + 1))} className="flex size-7 items-center justify-center rounded-full border border-line bg-surface hover:border-line-strong" aria-label="Mehr Tassen">
+                      <button type="button" onClick={() => setWantCups(Math.min(8, wantCups + 1))} className="flex size-11 items-center justify-center rounded-full border border-line bg-surface hover:border-line-strong sm:size-8" aria-label="Mehr Tassen">
                         <Plus className="size-3.5" aria-hidden />
                       </button>
                     </span>
@@ -293,7 +296,7 @@ function Configurator() {
                     setAmount(suggestion.amount)
                     setRhythm(suggestion.rhythm)
                   }}
-                  className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-surface px-4 text-sm font-semibold text-ink shadow-soft ring-1 ring-line transition-colors hover:ring-line-strong disabled:bg-success-soft disabled:text-success disabled:ring-0"
+                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-surface px-4 text-sm font-semibold text-ink shadow-soft ring-1 ring-line transition-colors hover:ring-line-strong disabled:bg-success-soft disabled:text-success disabled:ring-0"
                 >
                   {suggestionActive ? <Check className="size-4" aria-hidden /> : null}
                   {suggestion.amount === 1000 ? '1 kg' : `${suggestion.amount} g`} alle {suggestion.rhythm} Wochen
@@ -478,7 +481,7 @@ function Toggle({ label, value, options, onChange }: { label: string; value: num
           role="radio"
           aria-checked={value === o.v}
           onClick={() => onChange(o.v)}
-          className={cn('h-9 rounded-full px-4 text-sm font-semibold transition-colors', value === o.v ? 'bg-sidebar text-sidebar-ink' : 'text-ink-3 hover:text-ink')}
+          className={cn('h-11 rounded-full px-4 text-sm font-semibold transition-colors sm:h-9', value === o.v ? 'bg-sidebar text-sidebar-ink' : 'text-ink-3 hover:text-ink')}
         >
           {o.l}
         </button>

@@ -107,7 +107,7 @@ function Hero({ featured }: { featured: Product[] }) {
           <ul className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 sm:flex-row sm:flex-wrap sm:gap-x-8" aria-label="Unsere Cafés gerade">
             {cafes.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 sm:justify-start">
-                <Link to="/cafes" className="text-sm font-semibold text-white/90 underline-offset-4 hover:underline">
+                <Link to="/cafes" className="inline-flex min-h-11 items-center text-sm font-semibold text-white underline-offset-4 hover:underline">
                   {c.name}
                 </Link>
                 <OpenBadge cafe={c} tone="onDark" />
@@ -334,7 +334,7 @@ function NameStories({ products }: { products: Product[] }) {
                 >
                   <span className="hidden size-2.5 shrink-0 rounded-full lg:block" style={{ background: p.color }} aria-hidden />
                   <span className="font-display text-lg font-semibold lg:text-2xl">{p.name}</span>
-                  <span className={cn('hidden text-sm lg:inline', selected ? 'text-ink-3' : 'text-ink-3/80')}>{p.subtitle}</span>
+                  <span className={cn('hidden text-sm lg:inline', 'text-ink-3')}>{p.subtitle}</span>
                   {selected && !touched && !reduced && inView && named.length > 1 ? (
                     <span aria-hidden className="absolute inset-x-4 bottom-1.5 hidden h-0.5 overflow-hidden rounded-full bg-surface-3 lg:block">
                       <span key={`${active.id}-${paused}`} className="block h-full origin-left bg-accent" style={{ animation: paused ? 'none' : 'rb-grow 7s linear both' }} />
@@ -365,7 +365,7 @@ function NameStories({ products }: { products: Product[] }) {
                 {active.story}
               </blockquote>
               <NoteChips notes={active.notes} className="mt-7" />
-              <Link to={`/shop/${active.slug}`} className="mt-8 inline-flex items-center gap-2 text-[15px] font-semibold text-ink underline decoration-ink/30 underline-offset-[6px] transition hover:decoration-ink">
+              <Link to={`/shop/${active.slug}`} className="mt-6 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-ink underline decoration-ink/30 underline-offset-[6px] transition hover:decoration-ink">
                 {active.name} kennenlernen
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
@@ -450,7 +450,7 @@ function FinderTeaser({ products }: { products: Product[] }) {
               )
             })}
           </div>
-          <Link to="/geschmacksfinder" className="mt-6 inline-flex items-center gap-2 text-[15px] font-semibold text-accent-text underline-offset-4 hover:underline">
+          <Link to="/geschmacksfinder" className="mt-4 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-accent-text underline-offset-4 hover:underline">
             Zum ausführlichen Geschmacksfinder
             <ArrowRight className="size-4" aria-hidden />
           </Link>
@@ -583,7 +583,7 @@ function AboBand() {
                       role="radio"
                       aria-checked={rhythm === r}
                       onClick={() => setRhythm(r)}
-                      className={cn('h-8 rounded-full px-3.5 text-xs font-semibold transition-colors', rhythm === r ? 'bg-ink text-canvas' : 'text-ink-2 hover:text-ink')}
+                      className={cn('h-11 rounded-full px-3.5 text-xs font-semibold transition-colors sm:h-8', rhythm === r ? 'bg-ink text-canvas' : 'text-ink-2 hover:text-ink')}
                     >
                       alle {r} Wochen
                     </button>
@@ -602,12 +602,15 @@ function AboBand() {
                   return (
                     <span
                       key={d.toISOString()}
+                      // Tage außerhalb des Monats nur als Deko (Pseudo-Element, nicht im Accessibility-Baum)
+                      data-d={!delivery && !inMonth ? d.getDate() : undefined}
+                      aria-hidden={!delivery && !inMonth ? true : undefined}
                       className={cn(
                         'relative flex aspect-square items-center justify-center rounded-xl text-xs transition-all duration-300',
-                        delivery ? 'scale-105 bg-accent-solid font-bold text-on-accent shadow-[0_6px_16px_-6px_rgb(165_90_34/0.7)]' : inMonth ? 'bg-surface-2 text-ink-2' : 'text-ink-3/50',
+                        delivery ? 'scale-105 bg-accent-solid font-bold text-on-accent shadow-[0_6px_16px_-6px_rgb(165_90_34/0.7)]' : inMonth ? 'bg-surface-2 text-ink-2' : 'text-ink-3/50 before:content-[attr(data-d)]',
                       )}
                     >
-                      {delivery ? <Package className="size-4" /> : d.getDate()}
+                      {delivery ? <Package className="size-4" /> : inMonth ? d.getDate() : null}
                     </span>
                   )
                 })}
@@ -669,7 +672,7 @@ function CafesSection() {
   const cafes = useStore((s) => s.cafes)
   if (!cafes.length) return null
   return (
-    <section aria-labelledby="cafes-title" className="py-20 md:py-28">
+    <section aria-labelledby="cafes-title" className="rb-cv py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="Unsere Cafés"
@@ -763,7 +766,7 @@ function WorkshopsTeaser() {
   }, [workshops, now])
   if (!upcoming.length) return null
   return (
-    <section aria-labelledby="workshops-title" className="border-y border-line bg-surface-2/50 py-20 md:py-28">
+    <section aria-labelledby="workshops-title" className="rb-cv border-y border-line bg-surface-2/50 py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="Workshops"
@@ -827,7 +830,7 @@ function WorkshopsTeaser() {
                     <Link
                       to="/workshops"
                       className={cn(
-                        'inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors after:absolute after:inset-0',
+                        'inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors after:absolute after:inset-0',
                         left > 0 ? 'bg-ink text-canvas group-hover:bg-accent-solid group-hover:text-on-accent' : 'bg-surface-2 text-ink-2',
                       )}
                     >
@@ -858,7 +861,7 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
 
 function OriginTeaser() {
   return (
-    <section aria-labelledby="origin-title" className="grain relative overflow-hidden bg-sidebar py-20 text-sidebar-ink md:py-28">
+    <section aria-labelledby="origin-title" className="rb-cv grain relative overflow-hidden bg-sidebar py-20 text-sidebar-ink md:py-28">
       <div aria-hidden className="pointer-events-none absolute -right-40 -bottom-40 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgb(196_112_47/0.28),transparent)]" />
       <Container className="relative">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
@@ -914,7 +917,7 @@ function SocialStrip() {
   )
   if (!latest.length) return null
   return (
-    <section aria-labelledby="social-title" className="py-20 md:py-28">
+    <section aria-labelledby="social-title" className="rb-cv py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="@roestbrueder"

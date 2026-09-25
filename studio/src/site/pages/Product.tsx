@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, ChevronDown, Leaf, MapPin, Repeat, Sparkles, Store, Truck } from 'lucide-react'
+import { ArrowRight, BookOpen, Check, ChevronDown, Leaf, MapPin, Repeat, Sparkles, Store, Truck } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { ABO_PRICES, FREE_SHIPPING_FROM, GRINDS, useCart } from '../../lib/cart'
@@ -8,7 +8,10 @@ import { cn } from '../../lib/utils'
 import { CoffeeBag, Container, NoteChips, RoastMeter, siteButtonClass, TasteBars } from '../components'
 import { BREW_LABELS, price, ROAST_LABELS } from '../lib'
 import { AddToCartButton, ProductCard, QtyStepper } from '../shell/commerce'
+import { addToCartWithFeedback } from '../shell/cartFx'
 import { similarProducts, stageTint, usePageTitle } from '../shell/hooks'
+import { RecentlyViewed } from '../shell/RecentlyViewed'
+import { useTrackProductView } from '../shell/storage'
 
 // ---------------------------------------------------------------------------
 // Produktseite
@@ -73,8 +76,10 @@ function ProductNotFound() {
 }
 
 function ProductView({ product, products }: { product: Product; products: Product[] }) {
-  const add = useCart((s) => s.add)
+  const setCartOpen = useCart((s) => s.setOpen)
   const [size, setSize] = useState<'250' | '1000'>('250')
+  const [justAdded, setJustAdded] = useState<string | null>(null)
+  useTrackProductView(product.slug)
   const [grind, setGrind] = useState<Grind>('bohne')
   const [qty, setQty] = useState(1)
   const [ctaVisible, setCtaVisible] = useState(true)
@@ -98,11 +103,16 @@ function ProductView({ product, products }: { product: Product; products: Produc
     return () => io.disconnect()
   }, [])
 
-  const addToCart = () => add({ kind: 'product', productId: product.id, size, grind, qty })
+  const addToCart = (el: HTMLButtonElement) => {
+    const label = `${qty} × ${product.name}${isGift ? '' : ` · ${bagLabel} · ${GRINDS[grind]}`}`
+    addToCartWithFeedback({ kind: 'product', productId: product.id, size, grind, qty }, { from: el, label })
+    setJustAdded(label)
+  }
 
   return (
     <>
       <Container className="pt-6 pb-20 md:pt-10 md:pb-28">
+        <div data-fly-root className="contents">
         <nav aria-label="Brotkrümel" className="mb-6 text-sm text-ink-3 lg:hidden">
           <Breadcrumb product={product} />
         </nav>
@@ -123,7 +133,9 @@ function ProductView({ product, products }: { product: Product; products: Produc
                   size === '1000' ? 'top-[8%] w-[50%] sm:w-[40%] lg:w-auto lg:h-[76%]' : 'top-[13%] w-[44%] sm:w-[34%] lg:w-auto lg:h-[66%]',
                 )}
               >
-                <CoffeeBag product={product} size={bagLabel} className="lg:h-full lg:w-auto" />
+                <div data-fly-src className="lg:h-full">
+                  <CoffeeBag product={product} size={bagLabel} className="lg:h-full lg:w-auto" />
+                </div>
               </div>
               <p className="absolute top-5 left-5 inline-flex items-center gap-1.5 rounded-full bg-surface/85 px-3 py-1.5 text-xs font-semibold text-ink backdrop-blur">
                 <Leaf className="size-3.5 text-success" aria-hidden />
@@ -134,7 +146,7 @@ function ProductView({ product, products }: { product: Product; products: Produc
               ) : null}
             </div>
             {hasKg ? (
-              <div className="mt-4 grid grid-cols-2 gap-3" role="group" aria-label="Packungsgröße wählen">
+              <div className="mt-4 hidden grid-cols-2 gap-3 lg:grid" role="group" aria-label="Packungsgröße wählen">
                 {(['250', '1000'] as const).map((s) => (
                   <button
                     key={s}
@@ -222,6 +234,28 @@ function ProductView({ product, products }: { product: Product; products: Produc
                 In den Warenkorb · {price(unit * qty)}
               </AddToCartButton>
             </div>
+            <div aria-live="polite">
+              {justAdded ? (
+                <div key={justAdded} className="mt-3 flex animate-fade-in flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-success-soft px-4 py-3 text-sm">
+                  <span className="flex size-6 shrink-0 animate-pop-in items-center justify-center rounded-full bg-success text-white">
+                    <Check className="size-3.5" strokeWidth={3} aria-hidden />
+                  </span>
+                  <p className="min-w-0 flex-1 text-success">
+                    <strong className="font-semibold">Im Warenkorb</strong>
+                    <span className="text-ink-2"> · {justAdded}</span>
+                  </p>
+                  <span className="flex items-center gap-1">
+                    <button type="button" onClick={() => setCartOpen(true)} className="inline-flex h-11 items-center rounded-full px-3 font-semibold text-ink transition-colors hover:bg-surface/70">
+                      Ansehen
+                    </button>
+                    <Link to="/kasse" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-accent-solid px-4 font-semibold text-on-accent transition-colors hover:bg-accent-solid-hover">
+                      Zur Kasse
+                      <ArrowRight className="size-4" aria-hidden />
+                    </Link>
+                  </span>
+                </div>
+              ) : null}
+            </div>
             {!isGift ? (
               <Link
                 to={`/abo?kaffee=${encodeURIComponent(product.slug)}`}
@@ -303,7 +337,7 @@ function ProductView({ product, products }: { product: Product; products: Produc
                   ))}
                 </ul>
                 <p className="mt-4 text-xs text-ink-3">Richtwerte – am Ende entscheidet dein Geschmack.</p>
-                <Link to="/anleitungen" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent-text hover:underline">
+                <Link to="/anleitungen" className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent-text hover:underline">
                   <BookOpen className="size-4" aria-hidden />
                   Zu den Brühanleitungen
                 </Link>
@@ -313,6 +347,7 @@ function ProductView({ product, products }: { product: Product; products: Produc
               </Accordion>
             </div>
           </div>
+        </div>
         </div>
       </Container>
 
@@ -334,13 +369,15 @@ function ProductView({ product, products }: { product: Product; products: Produc
             <ul className="grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((p) => (
                 <li key={p.id} className="flex min-w-0">
-                  <ProductCard product={p} className="w-full" />
+                  <ProductCard product={p} className="w-full" quickView />
                 </li>
               ))}
             </ul>
           </Container>
         </section>
       ) : null}
+
+      <RecentlyViewed exclude={product.slug} />
 
       {/* Mobile: Kaufleiste, sobald der Haupt-Button aus dem Bild ist */}
       <div className="h-20 lg:hidden" aria-hidden />
@@ -352,15 +389,24 @@ function ProductView({ product, products }: { product: Product; products: Produc
         aria-hidden={ctaVisible}
         inert={ctaVisible}
       >
-        <div className="mx-auto flex max-w-xl items-center gap-3">
+        <div className="mx-auto flex max-w-xl items-center gap-3" data-fly-root>
           <span className="flex size-12 shrink-0 items-center justify-center rounded-xl" style={{ background: stageTint(product.color, 26) }} aria-hidden>
-            <CoffeeBag product={product} size={bagLabel} className="w-[56%] drop-shadow-[0_4px_6px_rgba(40,22,10,0.25)]" />
+            <span data-fly-src className="w-[56%]">
+              <CoffeeBag product={product} size={bagLabel} className="drop-shadow-[0_4px_6px_rgba(40,22,10,0.25)]" />
+            </span>
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-lg leading-tight font-semibold text-ink">{product.name}</p>
-            <p className="tabular truncate text-xs text-ink-3">
-              {price(unit)} · {isGift ? 'Box' : bagLabel} · {GRINDS[grind]}
-            </p>
+            {justAdded ? (
+              <Link to="/kasse" className="flex items-center gap-1 truncate text-xs font-semibold text-success">
+                <Check className="size-3.5 shrink-0" strokeWidth={3} aria-hidden />
+                Im Warenkorb · <span className="underline underline-offset-2">Zur Kasse</span>
+              </Link>
+            ) : (
+              <p className="tabular truncate text-xs text-ink-3">
+                {price(unit)} · {isGift ? 'Box' : bagLabel} · {GRINDS[grind]}
+              </p>
+            )}
           </div>
           <AddToCartButton compact disabled={!product.available} onAdd={addToCart} label={`${product.name} in den Warenkorb`}>
             In den Korb

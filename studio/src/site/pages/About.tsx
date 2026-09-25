@@ -150,9 +150,7 @@ function Values() {
                     <span className="flex size-11 items-center justify-center rounded-2xl bg-accent-soft text-accent-text" aria-hidden>
                       {v.icon}
                     </span>
-                    <span className="tabular font-display text-3xl font-semibold text-ink-3/40" aria-hidden>
-                      0{i + 1}
-                    </span>
+                    <span className="tabular font-display text-3xl font-semibold text-ink-3/40 before:content-[attr(data-n)]" data-n={`0${i + 1}`} aria-hidden />
                   </div>
                   <h3 className="mt-6 font-display text-2xl font-semibold text-ink">{v.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{v.text}</p>
