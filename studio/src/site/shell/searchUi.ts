@@ -32,14 +32,15 @@ export function useSearchShortcuts() {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.isComposing) return
       const ui = useSearchUi.getState()
-      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+      // nicht über einen anderen offenen Dialog (Warenkorb, Menü, Schnellansicht, Cookies) legen
+      const otherDialog = !ui.open && document.querySelector('[aria-modal="true"]:not([data-closing])') !== null
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') {
+        if (otherDialog) return
         e.preventDefault()
         ui.setOpen(!ui.open)
         return
       }
-      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !ui.open && !isTypingTarget(e.target)) {
-        // nicht, wenn gerade ein anderer Dialog offen ist
-        if (document.querySelector('[aria-modal="true"]')) return
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !ui.open && !otherDialog && !isTypingTarget(e.target)) {
         e.preventDefault()
         ui.setOpen(true)
       }

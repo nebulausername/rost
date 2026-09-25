@@ -241,7 +241,7 @@ function FeaturedCoffees({ featured }: { featured: Product[] }) {
         <ul className="rb-no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-12 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4">
           {featured.map((p) => (
             <li key={p.id} className="rb-reveal flex w-[80%] shrink-0 snap-start sm:w-[46%] md:w-auto">
-              <ProductCard product={p} pricePrefix="ab" priority addVariant="icon" className="w-full" />
+              <ProductCard product={p} pricePrefix="ab" priority addVariant="icon" className="w-full" quickView />
             </li>
           ))}
         </ul>
@@ -358,7 +358,7 @@ function NameStories({ products }: { products: Product[] }) {
           <div key={active.id} className="relative grid animate-[rb-rise_600ms_cubic-bezier(0.2,0.8,0.2,1)_both] gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
               <Quote className="mb-5 size-9 -scale-x-100 text-ink/25" aria-hidden />
-              <p className="text-xs font-semibold tracking-[0.2em] text-ink-2 uppercase">
+              <p className="text-xs font-semibold tracking-[0.2em] text-ink uppercase">
                 {active.name} · {active.subtitle}
               </p>
               <blockquote className="mt-5 font-display text-[28px] leading-[1.15] font-medium tracking-tight text-ink sm:text-4xl lg:text-[44px]">
@@ -672,7 +672,7 @@ function CafesSection() {
   const cafes = useStore((s) => s.cafes)
   if (!cafes.length) return null
   return (
-    <section aria-labelledby="cafes-title" className="rb-cv py-20 md:py-28">
+    <section aria-labelledby="cafes-title" className="py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="Unsere Cafés"
@@ -766,7 +766,7 @@ function WorkshopsTeaser() {
   }, [workshops, now])
   if (!upcoming.length) return null
   return (
-    <section aria-labelledby="workshops-title" className="rb-cv border-y border-line bg-surface-2/50 py-20 md:py-28">
+    <section aria-labelledby="workshops-title" className="border-y border-line bg-surface-2/50 py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="Workshops"
@@ -861,7 +861,7 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
 
 function OriginTeaser() {
   return (
-    <section aria-labelledby="origin-title" className="rb-cv grain relative overflow-hidden bg-sidebar py-20 text-sidebar-ink md:py-28">
+    <section aria-labelledby="origin-title" className="grain relative overflow-hidden bg-sidebar py-20 text-sidebar-ink md:py-28">
       <div aria-hidden className="pointer-events-none absolute -right-40 -bottom-40 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgb(196_112_47/0.28),transparent)]" />
       <Container className="relative">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
@@ -917,7 +917,7 @@ function SocialStrip() {
   )
   if (!latest.length) return null
   return (
-    <section aria-labelledby="social-title" className="rb-cv py-20 md:py-28">
+    <section aria-labelledby="social-title" className="py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="@roestbrueder"

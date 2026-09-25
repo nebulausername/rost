@@ -51,7 +51,7 @@ export function AddToCartButton({
         disabled
           ? 'bg-surface-2 text-ink-3'
           : added
-            ? 'bg-success text-white'
+            ? 'bg-success text-canvas'
             : 'bg-ink text-canvas hover:bg-accent-solid hover:text-on-accent hover:shadow-[0_8px_24px_-8px_rgb(165_90_34/0.6)]',
         className,
       )}
@@ -77,7 +77,7 @@ export function IconAddButton({ onAdd, disabled, label }: { onAdd: (el: HTMLButt
       }}
       className={cn(
         'relative z-10 inline-flex size-12 shrink-0 items-center justify-center rounded-full transition-[background-color,color,transform,box-shadow] duration-200 active:scale-95 disabled:pointer-events-none',
-        disabled ? 'bg-surface-2 text-ink-3' : added ? 'bg-success text-white' : 'bg-ink text-canvas hover:scale-105 hover:bg-accent-solid hover:text-on-accent hover:shadow-[0_8px_24px_-8px_rgb(165_90_34/0.6)]',
+        disabled ? 'bg-surface-2 text-ink-3' : added ? 'bg-success text-canvas' : 'bg-ink text-canvas hover:scale-105 hover:bg-accent-solid hover:text-on-accent hover:shadow-[0_8px_24px_-8px_rgb(165_90_34/0.6)]',
       )}
     >
       {added ? <Check className="size-5" aria-hidden /> : <ShoppingBag className="size-5" aria-hidden />}
@@ -216,7 +216,7 @@ export function QtyStepper({
 }) {
   const btn = cn(
     'inline-flex items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-35 disabled:hover:bg-transparent',
-    size === 'sm' ? 'size-8' : 'size-11',
+    size === 'sm' ? 'size-11 md:size-8' : 'size-11',
   )
   return (
     <div role="group" aria-label={label} className={cn('inline-flex items-center rounded-full border border-line bg-surface', size === 'sm' ? 'p-0.5' : 'p-0.5', className)}>

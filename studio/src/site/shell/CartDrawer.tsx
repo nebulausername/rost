@@ -56,6 +56,7 @@ export function CartDrawer() {
         ref={ref}
         role="dialog"
         aria-modal="true"
+        data-closing={closing || undefined}
         aria-labelledby={titleId}
         className={cn(
           'absolute inset-y-0 right-0 flex w-full max-w-[440px] flex-col bg-canvas shadow-float sm:rounded-l-[28px]',
@@ -73,7 +74,7 @@ export function CartDrawer() {
             type="button"
             onClick={close}
             data-autofocus
-            className="inline-flex size-10 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+            className="inline-flex size-11 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
             aria-label="Warenkorb schließen"
           >
             <X className="size-5" aria-hidden />
@@ -115,7 +116,7 @@ export function CartDrawer() {
                           <button
                             type="button"
                             onClick={() => onRemove(item)}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-ink-3 transition-colors hover:bg-danger-soft hover:text-danger"
+                            className="inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-ink-3 transition-colors hover:bg-danger-soft hover:text-danger md:h-8 md:px-2.5"
                             aria-label={`${title} entfernen`}
                           >
                             <Trash2 className="size-3.5" aria-hidden />
@@ -143,7 +144,7 @@ export function CartDrawer() {
                     <button
                       type="button"
                       onClick={() => add({ kind: 'product', productId: upsell.id, size: '250', grind: 'bohne', qty: 1 })}
-                      className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent-soft px-3 text-xs font-semibold text-accent-text transition-colors hover:bg-accent-solid hover:text-on-accent"
+                      className="inline-flex h-11 shrink-0 items-center gap-1 rounded-full bg-accent-soft px-3.5 text-xs font-semibold md:h-9 text-accent-text transition-colors hover:bg-accent-solid hover:text-on-accent"
                       aria-label={`${upsell.name} (250 g, ganze Bohne) hinzufügen`}
                     >
                       <Plus className="size-3.5" aria-hidden />
@@ -174,7 +175,7 @@ export function CartDrawer() {
                 Zur Kasse
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
-              <button type="button" onClick={close} className="mt-2 w-full rounded-full py-2 text-sm font-medium text-ink-2 transition-colors hover:text-ink">
+              <button type="button" onClick={close} className="mt-1 h-11 w-full rounded-full text-sm font-medium text-ink-2 transition-colors hover:text-ink">
                 Weiter einkaufen
               </button>
             </footer>

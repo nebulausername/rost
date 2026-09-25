@@ -42,7 +42,7 @@ export function LegalPage() {
             key={t.to}
             to={t.to}
             aria-current={t.active ? 'page' : undefined}
-            className={cn('inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors sm:h-9', t.active ? 'bg-sidebar text-sidebar-ink' : 'text-ink-3 hover:text-ink')}
+            className={cn('inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors sm:h-9', t.active ? 'bg-ink text-canvas' : 'text-ink-3 hover:text-ink')}
           >
             {t.label}
           </Link>

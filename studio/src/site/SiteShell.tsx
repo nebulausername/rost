@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigation, useNavigationType } from 'react-router'
 import { Toaster } from '../components/Toaster'
 import { useCart } from '../lib/cart'
@@ -10,9 +10,7 @@ import { ConsentManager } from './shell/ConsentManager'
 import { Footer } from './shell/Footer'
 import { Header, PromoBar } from './shell/Header'
 import { captureUtm, SITE_TITLE, useSessionFlag } from './shell/hooks'
-import { QuickViewDialog } from './shell/QuickView'
-import { closeQuickView } from './shell/quickViewStore'
-import { SiteSearch } from './shell/Search'
+import { closeQuickView, useQuickView } from './shell/quickViewStore'
 import { useSearchShortcuts, useSearchUi } from './shell/searchUi'
 
 // ---------------------------------------------------------------------------
@@ -51,8 +49,6 @@ const SITE_CSS = `
 @keyframes rb-count { from { transform: translateY(90%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .rb-marquee:hover .rb-marquee-track, .rb-marquee:focus-within .rb-marquee-track { animation-play-state: paused; }
 .rb-no-scrollbar { scrollbar-width: none; }
-/* Abschnitte weit unten erst rendern, wenn sie in die Nähe kommen (Platz bleibt reserviert) */
-.rb-cv { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 .rb-no-scrollbar::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
   /* globale Regel kürzt nur die Dauer – Endlos-Loops würden dann flackern */
@@ -64,6 +60,34 @@ const SITE_CSS = `
   html.rb-js .rb-reveal:not([data-shown]) { opacity: 0; transform: translateY(18px); }
 }
 `
+
+// Suche & Schnellansicht erst laden, wenn sie gebraucht werden (bzw. im Leerlauf vorladen)
+const loadSearch = () => import('./shell/Search')
+const loadQuickView = () => import('./shell/QuickView')
+const SiteSearch = lazy(() => loadSearch().then((m) => ({ default: m.SiteSearch })))
+const QuickViewDialog = lazy(() => loadQuickView().then((m) => ({ default: m.QuickViewDialog })))
+
+/** true, sobald `active` einmal true war – danach bleibt die Komponente gemountet (für Ausblend-Animationen) */
+function useOnceTrue(active: boolean) {
+  const [once, setOnce] = useState(active)
+  if (active && !once) setOnce(true)
+  return once
+}
+
+function useIdlePrefetch() {
+  useEffect(() => {
+    const run = () => {
+      void loadSearch()
+      void loadQuickView()
+    }
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(run, { timeout: 4000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const t = setTimeout(run, 2500)
+    return () => clearTimeout(t)
+  }, [])
+}
 
 /** Blendet .rb-reveal-Elemente ein, sobald sie sichtbar werden (auch nach Seitenwechseln) */
 function useRevealOnScroll() {
@@ -234,6 +258,9 @@ export function SiteShell() {
   }, [pathname])
 
   useSearchShortcuts()
+  useIdlePrefetch()
+  const searchReady = useOnceTrue(useSearchUi((s) => s.open))
+  const quickViewReady = useOnceTrue(useQuickView((s) => s.slug !== null))
 
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip bg-canvas text-base text-ink">
@@ -252,8 +279,10 @@ export function SiteShell() {
       </main>
       <Footer />
       <CartDrawer />
-      <QuickViewDialog />
-      <SiteSearch />
+      <Suspense fallback={null}>
+        {quickViewReady ? <QuickViewDialog /> : null}
+        {searchReady ? <SiteSearch /> : null}
+      </Suspense>
       <PrototypeNotice />
       <Toaster />
       <RouteProgress />

@@ -73,7 +73,7 @@ export function ExampleNote({ children, className }: { children: ReactNode; clas
 export function StepTitle({ n, title, hint, id }: { n: number; title: ReactNode; hint?: ReactNode; id?: string }) {
   return (
     <div className="mb-5 flex items-start gap-4">
-      <span className="tabular flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar font-display text-base font-semibold text-sidebar-ink">
+      <span className="tabular flex size-9 shrink-0 items-center justify-center rounded-full bg-ink font-display text-base font-semibold text-canvas">
         {n}
       </span>
       <div>

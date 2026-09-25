@@ -469,7 +469,7 @@ function Passport({ product: p, roastDate }: { product: Product; roastDate: Date
           {p.verify ? <span className="text-[11px] text-black/70">Angaben werden noch mit dem Shop abgeglichen.</span> : null}
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-lg bg-black/[0.04] px-3 py-2 font-mono text-[10px] leading-relaxed tracking-[0.12em] whitespace-nowrap text-black/55 sm:text-[11px]" aria-hidden>
+        <div className="mt-8 overflow-hidden rounded-lg bg-black/[0.04] px-3 py-2 font-mono text-[10px] leading-relaxed tracking-[0.12em] whitespace-nowrap text-black/65 sm:text-[11px]" aria-hidden>
           <div>{mrz1}</div>
           <div>{mrz2}</div>
         </div>

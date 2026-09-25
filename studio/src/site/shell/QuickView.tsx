@@ -74,6 +74,7 @@ function QuickViewPanel({ panelRef, product, closing, onClose }: { panelRef: Ref
       ref={panelRef}
       role="dialog"
       aria-modal="true"
+      data-closing={closing || undefined}
       aria-labelledby={titleId}
       data-fly-root
       className={cn(
@@ -151,7 +152,7 @@ function QuickViewPanel({ panelRef, product, closing, onClose }: { panelRef: Ref
           {added ? (
             <div className="flex animate-fade-in flex-wrap items-center gap-x-4 gap-y-3" role="status">
               <p className="flex min-w-0 flex-1 items-center gap-2.5 text-[15px] font-semibold text-ink">
-                <span className="flex size-8 shrink-0 animate-pop-in items-center justify-center rounded-full bg-success text-white">
+                <span className="flex size-8 shrink-0 animate-pop-in items-center justify-center rounded-full bg-success text-canvas">
                   <Check className="size-4" strokeWidth={3} aria-hidden />
                 </span>
                 <span className="min-w-0">

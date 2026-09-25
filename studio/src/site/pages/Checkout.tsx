@@ -213,7 +213,6 @@ function CheckoutForm({ onDone }: { onDone: (d: Done) => void }) {
       }
       placeOrder(order)
       if (form.newsletter) subscribe(form.email, 'Kasse')
-      writeSession(CONTACT_KEY, '')
       clear()
       window.scrollTo(0, 0)
       onDone({ order, firstName: form.name.trim().split(/\s+/)[0] ?? '', pickup })
@@ -522,7 +521,7 @@ function CheckoutSteps({ current, onCart, className }: { current: 1 | 2 | 3; onC
                 <span
                   className={cn(
                     'tabular flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors',
-                    done ? 'bg-success text-white' : isCurrent ? 'bg-ink text-canvas' : 'bg-surface-2 text-ink-3',
+                    done ? 'bg-success text-canvas' : isCurrent ? 'bg-ink text-canvas' : 'bg-surface-2 text-ink-3',
                   )}
                   aria-hidden
                 >
@@ -555,7 +554,7 @@ function Section({ n, title, done, children }: { n: number; title: string; done:
         Schritt {n}: {title}
       </legend>
       <div className="mb-5 flex items-center gap-3" aria-hidden>
-        <span className={cn('tabular flex size-8 items-center justify-center rounded-full text-sm font-bold transition-colors', done ? 'bg-success text-white' : 'bg-ink text-canvas')}>
+        <span className={cn('tabular flex size-8 items-center justify-center rounded-full text-sm font-bold transition-colors', done ? 'bg-success text-canvas' : 'bg-ink text-canvas')}>
           {done ? <Check className="size-4" /> : n}
         </span>
         <span className="font-display text-2xl font-semibold text-ink">{title}</span>
@@ -701,7 +700,7 @@ function Confirmation({ done }: { done: Done }) {
       <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 size-[640px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(196_112_47/0.18),transparent)]" />
       <Container className="relative flex flex-col items-center pt-10 pb-24 text-center md:pt-14">
         <CheckoutSteps current={3} className="mb-12 md:mb-16" />
-        <div className="relative flex size-24 animate-pop-in items-center justify-center rounded-full bg-success text-white shadow-[0_20px_40px_-16px_rgb(79_112_73/0.8)]">
+        <div className="relative flex size-24 animate-pop-in items-center justify-center rounded-full bg-success text-canvas shadow-[0_20px_40px_-16px_rgb(79_112_73/0.8)]">
           <Check className="size-11" strokeWidth={2.5} aria-hidden />
           <span className="rb-loop absolute inset-0 animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_2] rounded-full bg-success/30" aria-hidden />
         </div>

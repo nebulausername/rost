@@ -91,6 +91,7 @@ export function SiteSearch() {
         ref={ref}
         role="dialog"
         aria-modal="true"
+        data-closing={closing || undefined}
         aria-label="Website durchsuchen"
         className={cn(
           'relative flex h-dvh w-full flex-col overflow-hidden bg-canvas shadow-float sm:h-auto sm:max-h-[min(720px,82vh)] sm:max-w-2xl sm:rounded-[28px] sm:border sm:border-line',
@@ -361,7 +362,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <footer className="hidden shrink-0 items-center justify-between gap-4 border-t border-line bg-surface px-5 py-2.5 text-xs text-ink-3 sm:flex">
+      <div className="hidden shrink-0 items-center justify-between gap-4 border-t border-line bg-surface px-5 py-2.5 text-xs text-ink-3 sm:flex">
         <span className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
@@ -381,7 +382,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         <span>
           Tipp: <Kbd>/</Kbd> oder <Kbd>{isMac() ? '⌘' : 'Strg'} K</Kbd> öffnet die Suche
         </span>
-      </footer>
+      </div>
     </>
   )
 }

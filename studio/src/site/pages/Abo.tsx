@@ -481,7 +481,7 @@ function Toggle({ label, value, options, onChange }: { label: string; value: num
           role="radio"
           aria-checked={value === o.v}
           onClick={() => onChange(o.v)}
-          className={cn('h-11 rounded-full px-4 text-sm font-semibold transition-colors sm:h-9', value === o.v ? 'bg-sidebar text-sidebar-ink' : 'text-ink-3 hover:text-ink')}
+          className={cn('h-11 rounded-full px-4 text-sm font-semibold transition-colors sm:h-9', value === o.v ? 'bg-ink text-canvas' : 'text-ink-3 hover:text-ink')}
         >
           {o.l}
         </button>

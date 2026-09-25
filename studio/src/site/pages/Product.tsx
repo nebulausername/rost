@@ -237,7 +237,7 @@ function ProductView({ product, products }: { product: Product; products: Produc
             <div aria-live="polite">
               {justAdded ? (
                 <div key={justAdded} className="mt-3 flex animate-fade-in flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-success-soft px-4 py-3 text-sm">
-                  <span className="flex size-6 shrink-0 animate-pop-in items-center justify-center rounded-full bg-success text-white">
+                  <span className="flex size-6 shrink-0 animate-pop-in items-center justify-center rounded-full bg-success text-canvas">
                     <Check className="size-3.5" strokeWidth={3} aria-hidden />
                   </span>
                   <p className="min-w-0 flex-1 text-success">

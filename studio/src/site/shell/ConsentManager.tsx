@@ -70,21 +70,19 @@ function ConsentBanner() {
       className="fixed inset-x-3 bottom-3 z-[60] animate-[rb-rise_520ms_cubic-bezier(0.2,0.8,0.2,1)_both] sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[440px]"
     >
       <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-[28px] border border-line bg-surface p-5 shadow-float sm:p-6">
-        <div className="flex items-start gap-3.5">
-          <CookieBean className="size-11 shrink-0" />
-          <div className="min-w-0">
-            <h2 id={titleId} className="font-display text-xl leading-tight font-semibold tracking-tight text-ink sm:text-2xl">
-              Ein Keks zum Kaffee?
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-2">
-              Für Warenkorb & Kasse brauchen wir nur das Nötigste. Mit deinem Okay würden wir außerdem anonym messen, was gut ankommt, und Werbung passender machen. Du kannst das jederzeit unter
-              „Cookie-Einstellungen“ im Footer ändern.{' '}
-              <Link to="/datenschutz#cookies" className="font-medium text-ink underline decoration-ink/30 underline-offset-2 hover:decoration-ink">
-                Mehr erfahren
-              </Link>
-            </p>
-          </div>
+        <div className="flex items-center gap-3">
+          <CookieBean className="size-10 shrink-0 sm:size-11" />
+          <h2 id={titleId} className="font-display text-xl leading-tight font-semibold tracking-tight text-ink sm:text-2xl">
+            Ein Keks zum Kaffee?
+          </h2>
         </div>
+        <p className="mt-3 text-sm leading-relaxed text-ink-2">
+          Für Warenkorb & Kasse brauchen wir nur das Nötigste. Mit deinem Okay messen wir zusätzlich anonym, was gut ankommt, und machen Werbung passender. Ändern kannst du das jederzeit im
+          Footer.{' '}
+          <Link to="/datenschutz#cookies" className="font-medium text-ink underline decoration-ink/30 underline-offset-2 hover:decoration-ink">
+            Mehr erfahren
+          </Link>
+        </p>
         <PrototypeHint className="mt-4" />
         <div className="mt-4 grid grid-cols-2 gap-2.5">
           <button type="button" onClick={acceptNecessary} className={decisionClass}>
@@ -133,6 +131,7 @@ function SettingsPanel({ panelRef, closing, onClose }: { panelRef: RefObject<HTM
       ref={panelRef}
       role="dialog"
       aria-modal="true"
+      data-closing={closing || undefined}
       aria-labelledby={titleId}
       aria-describedby={descId}
       className={cn(
@@ -140,7 +139,7 @@ function SettingsPanel({ panelRef, closing, onClose }: { panelRef: RefObject<HTM
         closing ? 'animate-[rb-fade-out_220ms_ease_both]' : 'animate-[rb-rise_380ms_cubic-bezier(0.2,0.8,0.2,1)_both]',
       )}
     >
-      <header className="flex items-start justify-between gap-4 px-5 pt-5 sm:px-7 sm:pt-7">
+      <div className="flex items-start justify-between gap-4 px-5 pt-5 sm:px-7 sm:pt-7">
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-accent-text uppercase">Datenschutz</p>
           <h2 id={titleId} className="mt-1.5 font-display text-3xl leading-tight font-semibold tracking-tight text-ink">
@@ -156,7 +155,7 @@ function SettingsPanel({ panelRef, closing, onClose }: { panelRef: RefObject<HTM
         >
           <X className="size-5" aria-hidden />
         </button>
-      </header>
+      </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-3 pb-5 sm:px-7">
         <p id={descId} className="text-sm leading-relaxed text-ink-2">
           Du entscheidest, was wir außer dem Nötigsten nutzen dürfen. Optionale Kategorien sind aus, bis du sie einschaltest.
@@ -210,7 +209,7 @@ function SettingsPanel({ panelRef, closing, onClose }: { panelRef: RefObject<HTM
           .
         </p>
       </div>
-      <footer className="grid gap-2.5 border-t border-line bg-surface px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:grid-cols-3 sm:px-7 sm:pb-5">
+      <div className="grid gap-2.5 border-t border-line bg-surface px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:grid-cols-3 sm:px-7 sm:pb-5">
         <button type="button" onClick={() => save({ statistics: false, marketing: false })} className={decisionClass}>
           Nur notwendige
         </button>
@@ -220,7 +219,7 @@ function SettingsPanel({ panelRef, closing, onClose }: { panelRef: RefObject<HTM
         <button type="button" onClick={() => save({ statistics: true, marketing: true })} className={decisionClass}>
           Alle akzeptieren
         </button>
-      </footer>
+      </div>
     </div>
   )
 }

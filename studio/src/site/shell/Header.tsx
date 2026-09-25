@@ -273,7 +273,7 @@ function CartButton({ overHero, count, onOpen }: { overHero: boolean; count: num
           className="absolute top-full right-0 z-50 mt-2 w-[min(320px,calc(100vw-2rem))] origin-top-right animate-[rb-menu-in_320ms_cubic-bezier(0.2,0.8,0.2,1)_both] rounded-3xl border border-line bg-surface p-4 text-ink shadow-float"
         >
           <div className="flex items-start gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success text-white">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success text-canvas">
               <Check className="size-4" strokeWidth={3} aria-hidden />
             </span>
             <p className="min-w-0 flex-1 pt-0.5 text-sm">
@@ -324,6 +324,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
       ref={ref}
       role="dialog"
       aria-modal="true"
+      data-closing={closing || undefined}
       aria-label="Menü"
       className={cn(
         'grain fixed inset-0 z-50 flex flex-col overflow-y-auto bg-sidebar text-sidebar-ink lg:hidden',
