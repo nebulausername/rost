@@ -1,7 +1,5 @@
 import { createBrowserRouter } from 'react-router'
-import { AppShell } from './components/layout/AppShell'
 import { NotFoundPage } from './pages/NotFound'
-import { SiteShell } from './site/SiteShell'
 
 const site = (load: () => Promise<Record<string, React.ComponentType>>, name: string) => () => load().then((m) => ({ Component: m[name] }))
 
@@ -25,7 +23,8 @@ const siteRoutes = [
 // Website unter „/“, Studio unter „/studio“. Jede Seite ist ein eigener Chunk.
 export const router = createBrowserRouter([
   {
-    element: <SiteShell />,
+    // Rahmen werden getrennt geladen: Website-Besucher laden das Studio nicht mit
+    lazy: () => import('./site/SiteShell').then((m) => ({ Component: m.SiteShell })),
     HydrateFallback: BootScreen,
     children: [
       { index: true, lazy: site(() => import('./site/pages/Home'), 'HomePage') },
@@ -35,7 +34,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/studio',
-    element: <AppShell />,
+    lazy: () => import('./components/layout/AppShell').then((m) => ({ Component: m.AppShell })),
     HydrateFallback: BootScreen,
     children: [
       { index: true, lazy: () => import('./pages/Cockpit').then((m) => ({ Component: m.CockpitPage })) },
