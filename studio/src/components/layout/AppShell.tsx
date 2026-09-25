@@ -1,5 +1,5 @@
-import { Megaphone, Menu, Monitor, Moon, Plus, Search, Sun, X } from 'lucide-react'
-import { useEffect } from 'react'
+import { Keyboard, Megaphone, Menu, Monitor, Moon, PanelLeftClose, PanelLeftOpen, Plus, Search, Sun, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate, useNavigation } from 'react-router'
 import { useStore, useUi } from '../../lib/store'
 import { cn } from '../../lib/utils'
@@ -7,13 +7,15 @@ import { CampaignEditor } from '../../features/CampaignEditor'
 import { PostEditor } from '../../features/PostEditor'
 import { CommandPalette } from '../CommandPalette'
 import { Toaster } from '../Toaster'
-import { Avatar, Button, Kbd } from '../ui/primitives'
+import { Avatar, Button, Kbd, Modal } from '../ui/primitives'
 import { NAV } from './nav'
+import { MobileTabBar } from './MobileTabBar'
+import { NotificationBell } from './Notifications'
 
 
-function Logo() {
+function Logo({ compact }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2.5" title="Röstbrüder Studio">
       <div className="flex size-9 items-center justify-center rounded-xl bg-accent shadow-[inset_0_-2px_0_rgb(0_0_0/0.15)]">
         <svg viewBox="0 0 64 64" className="size-6" aria-hidden>
           <g transform="rotate(-30 32 32)">
@@ -22,7 +24,7 @@ function Logo() {
           </g>
         </svg>
       </div>
-      <div className="leading-tight">
+      <div className={cn('leading-tight', compact && 'sr-only')}>
         <p className="font-display text-[17px] font-semibold tracking-tight text-sidebar-ink">Röstbrüder</p>
         <p className="text-[10px] font-semibold tracking-[0.2em] text-sidebar-muted uppercase">Studio</p>
       </div>
@@ -30,7 +32,8 @@ function Logo() {
   )
 }
 
-function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+function Sidebar({ onNavigate, collapsed = false }: { onNavigate?: () => void; collapsed?: boolean }) {
+  const updateSettings = useStore((s) => s.updateSettings)
   const team = useStore((s) => s.team)
   const posts = useStore((s) => s.posts)
   const openPost = useUi((s) => s.openPost)
@@ -38,28 +41,40 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const groups = Array.from(new Set(NAV.map((n) => n.group)))
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-ink">
-      <div className="px-5 pt-5 pb-4">
-        <Logo />
+      <div className={cn('pt-5 pb-4', collapsed ? 'flex justify-center px-2' : 'px-5')}>
+        <Logo compact={collapsed} />
       </div>
-      <div className="px-3 pb-3">
+      <div className={cn('pb-3', collapsed ? 'px-2' : 'px-3')}>
         <Button
           variant="primary"
-          className="w-full justify-between"
+          className={cn('w-full', collapsed ? 'px-0' : 'justify-between')}
+          aria-label={collapsed ? 'Neuer Post (N)' : undefined}
+          title={collapsed ? 'Neuer Post (N)' : undefined}
           onClick={() => {
             openPost(null)
             onNavigate?.()
           }}
         >
-          <span className="flex items-center gap-2">
-            <Plus className="size-4" /> Neuer Post
-          </span>
-          <span className="rounded bg-black/15 px-1.5 text-[10px] font-semibold">N</span>
+          {collapsed ? (
+            <Plus className="size-4" />
+          ) : (
+            <>
+              <span className="flex items-center gap-2">
+                <Plus className="size-4" /> Neuer Post
+              </span>
+              <span className="rounded bg-black/15 px-1.5 text-[10px] font-semibold">N</span>
+            </>
+          )}
         </Button>
       </div>
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2 scrollbar-thin" aria-label="Hauptnavigation">
+      <nav className={cn('flex-1 overflow-y-auto py-2 scrollbar-thin', collapsed ? 'space-y-3 px-2' : 'space-y-5 px-3')} aria-label="Hauptnavigation">
         {groups.map((g) => (
           <div key={g}>
-            <p className="mb-1.5 px-2.5 text-[10px] font-semibold tracking-[0.16em] text-sidebar-muted uppercase">{g}</p>
+            {collapsed ? (
+              <div className="mx-auto mb-1.5 h-px w-6 bg-white/10" aria-hidden />
+            ) : (
+              <p className="mb-1.5 px-2.5 text-[10px] font-semibold tracking-[0.16em] text-sidebar-muted uppercase">{g}</p>
+            )}
             <ul className="space-y-0.5">
               {NAV.filter((n) => n.group === g).map((n) => (
                 <li key={n.to}>
@@ -67,9 +82,12 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     to={n.to}
                     end={n.to === '/studio'}
                     onClick={onNavigate}
+                    title={collapsed ? `${n.label}${n.shortcut ? ` (${n.shortcut})` : ''}` : undefined}
+                    aria-label={collapsed ? n.label : undefined}
                     className={({ isActive }) =>
                       cn(
-                        'group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium transition-colors',
+                        'group relative flex h-9 items-center gap-2.5 rounded-lg text-[13px] font-medium transition-colors',
+                        collapsed ? 'justify-center px-0' : 'px-2.5',
                         isActive ? 'bg-sidebar-active text-white' : 'text-sidebar-ink/75 hover:bg-sidebar-active/60 hover:text-white',
                       )
                     }
@@ -77,9 +95,15 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     {({ isActive }) => (
                       <>
                         <n.icon className={cn('size-4', isActive ? 'text-accent' : 'text-sidebar-muted group-hover:text-sidebar-ink')} />
-                        <span className="flex-1 truncate">{n.label}</span>
+                        {collapsed ? null : <span className="flex-1 truncate">{n.label}</span>}
                         {n.to === '/studio/pipeline' && reviewCount > 0 ? (
-                          <span className="rounded-full bg-accent-solid px-1.5 text-[10px] leading-4 font-bold text-on-accent" title="Wartet auf Freigabe">
+                          <span
+                            className={cn(
+                              'rounded-full bg-accent-solid px-1.5 text-[10px] leading-4 font-bold text-on-accent',
+                              collapsed && 'absolute -top-0.5 -right-0.5 px-1 text-[9px]',
+                            )}
+                            title="Wartet auf Freigabe"
+                          >
                             {reviewCount}
                           </span>
                         ) : null}
@@ -92,6 +116,20 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         ))}
       </nav>
+      {collapsed ? (
+        <div className="flex flex-col items-center gap-1 border-t border-white/5 p-2">
+          <ThemeSwitch compact />
+          <button
+            type="button"
+            onClick={() => updateSettings({ sidebarCollapsed: false })}
+            className="flex size-9 items-center justify-center rounded-lg text-sidebar-muted hover:bg-sidebar-active hover:text-sidebar-ink"
+            aria-label="Seitenleiste ausklappen"
+            title="Seitenleiste ausklappen ( [ )"
+          >
+            <PanelLeftOpen className="size-4" />
+          </button>
+        </div>
+      ) : (
       <div className="border-t border-white/5 p-4">
         <div className="flex items-center justify-between">
           <div className="flex -space-x-1.5">
@@ -101,7 +139,20 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               </span>
             ))}
           </div>
-          <ThemeSwitch />
+          <div className="flex items-center">
+            <ThemeSwitch />
+            {onNavigate ? null : (
+              <button
+                type="button"
+                onClick={() => updateSettings({ sidebarCollapsed: true })}
+                className="flex size-8 items-center justify-center rounded-lg text-sidebar-muted hover:bg-sidebar-active hover:text-sidebar-ink"
+                aria-label="Seitenleiste einklappen"
+                title="Seitenleiste einklappen ( [ )"
+              >
+                <PanelLeftClose className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
         <a
           href="/"
@@ -118,11 +169,12 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           Espressobar · Kaufstraße 19
         </p>
       </div>
+      )}
     </div>
   )
 }
 
-function ThemeSwitch() {
+function ThemeSwitch({ compact }: { compact?: boolean }) {
   const theme = useStore((s) => s.settings.theme)
   const update = useStore((s) => s.updateSettings)
   const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'
@@ -131,11 +183,15 @@ function ThemeSwitch() {
   return (
     <button
       onClick={() => update({ theme: next })}
-      className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-[11px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-active hover:text-sidebar-ink"
+      className={cn(
+        'flex items-center gap-1.5 rounded-lg text-[11px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-active hover:text-sidebar-ink',
+        compact ? 'size-9 justify-center' : 'h-8 px-2',
+      )}
       title={`Darstellung: ${label} (klicken zum Wechseln)`}
+      aria-label={`Darstellung: ${label}`}
     >
       <Icon className="size-4" />
-      {label}
+      {compact ? null : label}
     </button>
   )
 }
@@ -206,6 +262,8 @@ export function AppShell() {
   const openPost = useUi((s) => s.openPost)
   const openCampaign = useUi((s) => s.openCampaign)
   const demo = useStore((s) => s.settings.demoData)
+  const collapsed = useStore((s) => !!s.settings.sidebarCollapsed)
+  const [helpOpen, setHelpOpen] = useState(false)
   const location = useLocation()
   const navigation = useNavigation()
   const current = NAV.find((n) => (n.to === '/studio' ? location.pathname === '/studio' || location.pathname === '/studio/' : location.pathname.startsWith(n.to)))
@@ -227,8 +285,8 @@ export function AppShell() {
   return (
     <div className="min-h-dvh">
       {/* Desktop-Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block print:hidden">
-        <Sidebar />
+      <aside className={cn('fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 lg:block print:hidden', collapsed ? 'w-[72px]' : 'w-64')}>
+        <Sidebar collapsed={collapsed} />
       </aside>
 
       {/* Mobile-Navigation */}
@@ -254,7 +312,7 @@ export function AppShell() {
         </div>
       ) : null}
 
-      <div className="lg:pl-64 print:pl-0">
+      <div className={cn('transition-[padding] duration-200 print:pl-0', collapsed ? 'lg:pl-[72px]' : 'lg:pl-64')}>
         <header className="sticky top-0 z-20 border-b border-line/70 bg-canvas/85 backdrop-blur-md print:hidden">
           <div className="mx-auto flex h-14 max-w-[1500px] items-center gap-2 px-4 md:px-6 xl:px-8">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setNav(true)} aria-label="Navigation öffnen">
@@ -272,6 +330,10 @@ export function AppShell() {
               </span>
             </button>
             <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => setHelpOpen(true)} aria-label="Tastenkürzel anzeigen" title="Tastenkürzel ( ? )">
+                <Keyboard className="size-[18px]" />
+              </Button>
+              <NotificationBell />
               {demo ? (
                 <span className="hidden rounded-full border border-dashed border-line-strong px-2.5 py-1 text-[11px] font-medium text-ink-3 xl:inline" title="Beispieldaten – unter Einstellungen durch echte Daten ersetzen">
                   Demo-Daten
@@ -280,21 +342,99 @@ export function AppShell() {
               <Button variant="secondary" className="hidden sm:inline-flex" onClick={() => openCampaign(null)}>
                 <Megaphone className="size-4" /> Kampagne
               </Button>
-              <Button variant="primary" onClick={() => openPost(null)}>
-                <Plus className="size-4" /> <span className="hidden sm:inline">Post planen</span>
+              <Button variant="primary" className="hidden lg:inline-flex" onClick={() => openPost(null)}>
+                <Plus className="size-4" /> Post planen
               </Button>
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1500px] px-4 py-6 md:px-6 md:py-8 xl:px-8 print:p-0">
-          <Outlet />
+        <main className="mx-auto max-w-[1500px] px-4 pt-6 pb-28 md:px-6 md:pt-8 lg:pb-10 xl:px-8 print:p-0">
+          <div key={location.pathname} className="animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
 
+      <MobileTabBar />
+      <ShortcutHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpHotkey onOpen={() => setHelpOpen(true)} />
       <PostEditor />
       <CampaignEditor />
       <CommandPalette />
       <Toaster />
     </div>
   )
+}
+
+const SHORTCUTS: { group: string; items: { keys: string[]; label: string }[] }[] = [
+  {
+    group: 'Überall',
+    items: [
+      { keys: ['⌘', 'K'], label: 'Befehlspalette & Suche' },
+      { keys: ['N'], label: 'Neuer Post' },
+      { keys: ['W'], label: 'Neue Kampagne' },
+      { keys: ['['], label: 'Seitenleiste ein-/ausklappen' },
+      { keys: ['?'], label: 'Diese Übersicht' },
+      { keys: ['Esc'], label: 'Dialog schließen' },
+    ],
+  },
+  {
+    group: 'Im Post-Editor',
+    items: [
+      { keys: ['⌘', '↵'], label: 'Speichern' },
+      { keys: ['Tab'], label: 'Zum nächsten Feld' },
+    ],
+  },
+  {
+    group: 'Springen (G, dann …)',
+    items: NAV.filter((n) => n.shortcut).map((n) => ({ keys: n.shortcut!.split(' '), label: n.label })),
+  },
+]
+
+function ShortcutHelp({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Tastenkürzel" className="max-w-2xl">
+      <div className="grid gap-6 sm:grid-cols-2">
+        {SHORTCUTS.map((g) => (
+          <section key={g.group} className={g.group.startsWith('Springen') ? 'sm:col-span-2' : undefined}>
+            <h3 className="mb-2 text-[11px] font-semibold tracking-[0.14em] text-ink-3 uppercase">{g.group}</h3>
+            <ul className={cn('grid gap-x-6', g.group.startsWith('Springen') && 'sm:grid-cols-2')}>
+              {g.items.map((i) => (
+                <li key={i.label} className="flex items-center justify-between gap-3 border-b border-line py-2 text-sm text-ink-2 last:border-b-0">
+                  {i.label}
+                  <span className="flex gap-1">
+                    {i.keys.map((k) => (
+                      <Kbd key={k}>{k}</Kbd>
+                    ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </Modal>
+  )
+}
+
+/** „?“ öffnet die Tastenkürzel, „[“ klappt die Seitenleiste */
+function HelpHotkey({ onOpen }: { onOpen: () => void }) {
+  const update = useStore((s) => s.updateSettings)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement
+      if (t.closest('input, textarea, select, [contenteditable="true"]') || e.metaKey || e.ctrlKey || e.altKey) return
+      if (document.querySelector('[role="dialog"]')) return
+      if (e.key === '?') {
+        e.preventDefault()
+        onOpen()
+      } else if (e.key === '[') {
+        e.preventDefault()
+        update({ sidebarCollapsed: !useStore.getState().settings.sidebarCollapsed })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onOpen, update])
+  return null
 }

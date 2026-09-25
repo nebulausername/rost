@@ -29,7 +29,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { BarList, CHART, ChartTooltip, Delta, Meter, StatTile } from '../components/charts'
@@ -611,6 +611,7 @@ function Onboarding() {
   const settings = useStore((s) => s.settings)
   const update = useStore((s) => s.updateSettings)
   const done = settings.onboardingDone ?? []
+  const [expanded, setExpanded] = useState(() => typeof window === 'undefined' || window.matchMedia('(min-width: 768px)').matches)
   if (settings.onboardingHidden) return null
   const toggle = (id: string) => update({ onboardingDone: done.includes(id) ? done.filter((x) => x !== id) : [...done, id] })
   const pct = Math.round((done.length / STEPS.length) * 100)
@@ -626,12 +627,15 @@ function Onboarding() {
           <div className="w-40">
             <Meter value={done.length} max={STEPS.length} tone={pct === 100 ? 'success' : 'accent'} label="Fortschritt Einrichtung" />
           </div>
+          <Button size="sm" variant="secondary" onClick={() => setExpanded((e) => !e)} aria-expanded={expanded}>
+            {expanded ? 'Einklappen' : 'Schritte zeigen'}
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => update({ onboardingHidden: true })}>
             Ausblenden
           </Button>
         </div>
       </div>
-      <ol className="grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+      <ol className={cn(!expanded && 'hidden', 'grid grid-cols-1 gap-px border-t border-line bg-line sm:grid-cols-2 xl:grid-cols-3')}>
         {STEPS.map((st, i) => {
           const ok = done.includes(st.id)
           return (

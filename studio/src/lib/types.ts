@@ -186,6 +186,10 @@ export interface Settings {
   /** Erledigte Schritte der Einrichtungs-Checkliste im Cockpit */
   onboardingDone?: string[]
   onboardingHidden?: boolean
+  /** Zeitpunkt, bis zu dem Benachrichtigungen als gelesen gelten */
+  notificationsSeenAt?: string
+  /** Sidebar auf Icon-Leiste reduziert (Desktop) */
+  sidebarCollapsed?: boolean
 }
 
 // ---------------------------------------------------------------------------

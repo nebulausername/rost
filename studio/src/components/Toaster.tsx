@@ -6,7 +6,7 @@ export function Toaster() {
   const toasts = useUi((s) => s.toasts)
   const dismiss = useUi((s) => s.dismissToast)
   return (
-    <div aria-live="polite" className="pointer-events-none fixed right-4 bottom-4 z-[60] flex w-[min(380px,calc(100vw-2rem))] flex-col gap-2">
+    <div aria-live="polite" className="pointer-events-none fixed right-4 bottom-24 z-[60] lg:bottom-4 flex w-[min(380px,calc(100vw-2rem))] flex-col gap-2">
       {toasts.map((t) => {
         const Icon = t.tone === 'success' ? CheckCircle2 : t.tone === 'danger' ? TriangleAlert : Info
         return (

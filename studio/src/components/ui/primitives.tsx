@@ -3,6 +3,7 @@ import {
   forwardRef,
   useEffect,
   useId,
+  useRef,
   type ButtonHTMLAttributes,
   type CSSProperties,
   type InputHTMLAttributes,
@@ -332,20 +333,63 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 // Drawer & Modal
 // ---------------------------------------------------------------------------
 
-function useEscape(onClose: () => void, active: boolean) {
+// Stapel offener Dialoge: Escape & Fokusfalle gelten nur für den obersten.
+const dialogStack: symbol[] = []
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+
+/** Barrierefreie Dialoge: Escape, Fokusfalle, Scroll-Sperre, Fokus zurückgeben */
+function useDialog(ref: React.RefObject<HTMLElement | null>, onClose: () => void, active: boolean) {
+  const closeRef = useRef(onClose)
+  useEffect(() => {
+    closeRef.current = onClose
+  }, [onClose])
   useEffect(() => {
     if (!active) return
+    const token = Symbol('dialog')
+    dialogStack.push(token)
+    const opener = document.activeElement as HTMLElement | null
+    const isTop = () => dialogStack[dialogStack.length - 1] === token
+    // Anfangsfokus: [autofocus] oder erstes Feld, sonst der Dialog selbst
+    const t = setTimeout(() => {
+      const el = ref.current
+      if (!el || el.contains(document.activeElement)) return
+      const auto = el.querySelector<HTMLElement>('[autofocus], [data-autofocus]')
+      // Erstes Feld im Inhalt (nicht der Schließen-Knopf), sonst der Dialog selbst
+      const first = el.querySelector<HTMLElement>('[data-dialog-body] input, [data-dialog-body] textarea, [data-dialog-body] select')
+      ;(auto ?? first ?? el).focus({ preventScroll: true })
+    }, 20)
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (!isTop()) return
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        closeRef.current()
+        return
+      }
+      if (e.key !== 'Tab' || !ref.current) return
+      const items = Array.from(ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((x) => x.offsetParent !== null || x === document.activeElement)
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && (document.activeElement === first || !ref.current.contains(document.activeElement))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
+      clearTimeout(t)
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      dialogStack.splice(dialogStack.indexOf(token), 1)
+      if (!dialogStack.length) document.body.style.overflow = prev
+      if (opener && document.contains(opener)) opener.focus({ preventScroll: true })
     }
-  }, [onClose, active])
+  }, [active, ref])
 }
 
 export function Drawer({
@@ -366,16 +410,19 @@ export function Drawer({
   width?: string
 }) {
   const id = useId()
-  useEscape(onClose, open)
+  const ref = useRef<HTMLElement>(null)
+  useDialog(ref, onClose, open)
   if (!open) return null
   return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 animate-fade-in bg-[#140c07]/45 backdrop-blur-[2px]" onClick={onClose} />
       <section
+        ref={ref}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={id}
-        className={cn('relative flex h-full w-full animate-slide-in flex-col border-l border-line bg-canvas shadow-float', width)}
+        className={cn('relative flex h-full w-full animate-slide-in flex-col border-l border-line bg-canvas shadow-float outline-none', width)}
       >
         <header className="flex items-start justify-between gap-4 border-b border-line bg-surface px-5 py-4 md:px-6">
           <div className="min-w-0">
@@ -388,7 +435,9 @@ export function Drawer({
             <X className="size-4" />
           </Button>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">{children}</div>
+        <div data-dialog-body className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
+          {children}
+        </div>
         {footer ? <footer className="border-t border-line bg-surface px-5 py-3 md:px-6">{footer}</footer> : null}
       </section>
     </div>,
@@ -412,16 +461,19 @@ export function Modal({
   className?: string
 }) {
   const id = useId()
-  useEscape(onClose, open)
+  const ref = useRef<HTMLElement>(null)
+  useDialog(ref, onClose, open)
   if (!open) return null
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-[10vh]">
       <div className="fixed inset-0 animate-fade-in bg-[#140c07]/45 backdrop-blur-[2px]" onClick={onClose} />
       <section
+        ref={ref}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={id}
-        className={cn('relative w-full max-w-lg animate-pop-in rounded-2xl border border-line bg-surface shadow-float', className)}
+        className={cn('relative w-full max-w-lg animate-pop-in rounded-2xl border border-line bg-surface shadow-float outline-none', className)}
       >
         <header className="flex items-center justify-between gap-4 px-5 pt-4 pb-2">
           <h2 id={id} className="font-display text-lg font-semibold">
@@ -431,11 +483,58 @@ export function Modal({
             <X className="size-4" />
           </Button>
         </header>
-        <div className="px-5 pb-5">{children}</div>
-        {footer ? <footer className="flex justify-end gap-2 border-t border-line px-5 py-3">{footer}</footer> : null}
+        <div data-dialog-body className="px-5 pb-5">
+          {children}
+        </div>
+        {footer ? <footer className="flex flex-wrap justify-end gap-2 border-t border-line px-5 py-3">{footer}</footer> : null}
       </section>
     </div>,
     document.body,
+  )
+}
+
+/** Bestätigungsdialog statt window.confirm – gleich gewichtete, klare Aktionen */
+export function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel = 'Bestätigen',
+  cancelLabel = 'Abbrechen',
+  tone = 'primary',
+  onConfirm,
+  onCancel,
+  extra,
+}: {
+  open: boolean
+  title: ReactNode
+  description?: ReactNode
+  confirmLabel?: string
+  cancelLabel?: string
+  tone?: 'primary' | 'danger'
+  onConfirm: () => void
+  onCancel: () => void
+  extra?: ReactNode
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title={title}
+      className="max-w-md"
+      footer={
+        <>
+          {extra}
+          <Button onClick={onCancel} data-autofocus={tone === 'danger' ? true : undefined}>
+            {cancelLabel}
+          </Button>
+          <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} data-autofocus={tone === 'danger' ? undefined : true}>
+            {confirmLabel}
+          </Button>
+        </>
+      }
+    >
+      {description ? <p className="text-sm leading-relaxed text-ink-2">{description}</p> : null}
+    </Modal>
   )
 }
 

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { PlatformChip, PlatformIcon } from '../components/domain'
-import { Badge, Button, Drawer, Field, Input, Select, Textarea, Tint } from '../components/ui/primitives'
+import { Badge, Button, ConfirmDialog, Drawer, Field, Input, Kbd, Segmented, Select, Textarea, Tint } from '../components/ui/primitives'
 import { DEFAULT_CHECKLIST, FORMATS, KEYDATE_KINDS, LOCATIONS, MEDIA_TONES, PILLARS, PLATFORM, PLATFORMS, STATUSES } from '../lib/constants'
 import { occurrencesBetween } from '../lib/keydates'
 import { toast, useStore, useUi, type PostDraftPreset } from '../lib/store'
@@ -88,6 +88,7 @@ export function PostEditor() {
   const [draft, setDraft] = useState<Post | null>(null)
   const [dirty, setDirty] = useState(false)
   const [errors, setErrors] = useState<{ title?: string; platforms?: string }>({})
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -103,6 +104,7 @@ export function PostEditor() {
 
   if (!open || !draft) return null
   return (
+    <>
     <EditorBody
       key={draft.id}
       draft={draft}
@@ -115,11 +117,25 @@ export function PostEditor() {
         setDirty(true)
       }}
       onClose={() => {
-        if (dirty && !window.confirm('Ungespeicherte Änderungen verwerfen?')) return
-        close()
+        if (dirty) setConfirmDiscard(true)
+        else close()
       }}
       onSaved={close}
     />
+    <ConfirmDialog
+      open={confirmDiscard}
+      title="Änderungen verwerfen?"
+      description="Du hast ungespeicherte Änderungen an diesem Post. Wenn du jetzt schließt, gehen sie verloren."
+      confirmLabel="Verwerfen"
+      cancelLabel="Weiter bearbeiten"
+      tone="danger"
+      onCancel={() => setConfirmDiscard(false)}
+      onConfirm={() => {
+        setConfirmDiscard(false)
+        close()
+      }}
+    />
+    </>
   )
 }
 
@@ -158,6 +174,7 @@ function EditorBody({
   const [checkInput, setCheckInput] = useState('')
   const [uploading, setUploading] = useState(false)
   const [hooksOpen, setHooksOpen] = useState(false)
+  const [pane, setPane] = useState<'edit' | 'preview'>('edit')
   const products = useStore((s) => s.products)
 
   const when = parseISO(draft.scheduledAt)
@@ -228,6 +245,22 @@ function EditorBody({
     onSaved()
   }
 
+  // ⌘/Strg + Enter speichert – auch aus Textfeldern heraus
+  const saveRef = useRef(save)
+  useEffect(() => {
+    saveRef.current = save
+  })
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        saveRef.current()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const limitFor = draft.platforms
     .map((p) => ({ p, limit: PLATFORM[p].charLimit }))
     .filter((x): x is { p: Platform; limit: number } => x.limit != null)
@@ -274,8 +307,12 @@ function EditorBody({
         <Button variant="secondary" onClick={onClose}>
           Abbrechen
         </Button>
-        <Button variant="primary" onClick={save}>
+        <Button variant="primary" onClick={save} title="⌘/Strg + Enter">
           <Check className="size-4" /> {isNew ? 'Post anlegen' : 'Speichern'}
+          <span className="ml-1 hidden items-center gap-0.5 opacity-80 lg:inline-flex" aria-hidden>
+            <Kbd>⌘</Kbd>
+            <Kbd>↵</Kbd>
+          </span>
         </Button>
       </div>
     </div>
@@ -290,8 +327,21 @@ function EditorBody({
       subtitle={isNew ? 'Idee → Entwurf → Review → Freigabe → Geplant → Live' : `Zuletzt geändert ${formatDe(draft.updatedAt, "d. MMM 'um' HH:mm")}`}
       footer={footer}
     >
+      <div className="sticky top-0 z-10 border-b border-line bg-surface/95 px-5 py-2 backdrop-blur lg:hidden">
+        <Segmented
+          size="sm"
+          label="Ansicht"
+          value={pane}
+          onChange={setPane}
+          className="w-full [&>button]:flex-1 [&>button]:justify-center"
+          options={[
+            { value: 'edit', label: 'Bearbeiten' },
+            { value: 'preview', label: 'Vorschau' },
+          ]}
+        />
+      </div>
       <div className="grid lg:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="min-w-0 border-line lg:border-r">
+        <div className={cn('min-w-0 border-line lg:block lg:border-r', pane === 'preview' && 'hidden')}>
           {/* Titel & Status */}
           <div className="border-b border-line bg-surface px-5 pt-5 pb-4 md:px-6">
             <label htmlFor="post-title" className="sr-only">
@@ -722,7 +772,7 @@ function EditorBody({
           </Section>
         </div>
 
-        <aside className="border-t border-line bg-canvas p-5 md:p-6 lg:border-t-0">
+        <aside className={cn('border-line bg-canvas p-5 md:p-6 lg:block', pane === 'edit' && 'hidden')}>
           <div className="lg:sticky lg:top-0">
             <PostPreview draft={draft} />
           </div>
