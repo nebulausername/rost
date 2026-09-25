@@ -106,7 +106,7 @@ function ProductView({ product, products }: { product: Product; products: Produc
         <nav aria-label="Brotkrümel" className="mb-6 text-sm text-ink-3 lg:hidden">
           <Breadcrumb product={product} />
         </nav>
-        <div className="grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-16 xl:gap-20">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-16 xl:gap-20">
           {/* Bühne */}
           <div className="lg:sticky lg:top-28 lg:self-start">
             <div className="relative aspect-square overflow-hidden rounded-[36px] sm:aspect-[5/4] lg:aspect-auto lg:h-[min(660px,calc(100svh-15rem))] lg:min-h-[440px]" style={{ background: stageTint(product.color, 26) }}>
@@ -168,7 +168,7 @@ function ProductView({ product, products }: { product: Product; products: Produc
               {KIND_LABEL[product.kind]}
               {product.origin && !isGift ? ` · ${product.origin}` : ''}
             </p>
-            <h1 className="mt-3 font-display text-6xl leading-[0.95] font-semibold tracking-[-0.035em] text-ink sm:text-7xl xl:text-8xl">{product.name}</h1>
+            <h1 className="mt-3 font-display text-[min(3.75rem,15vw)] leading-[0.95] font-semibold tracking-[-0.035em] [overflow-wrap:anywhere] text-ink sm:text-7xl xl:text-8xl">{product.name}</h1>
             <p className="mt-3 text-xl text-ink-2">{product.subtitle}</p>
             <NoteChips notes={product.notes} className="mt-5" />
             <p className="mt-6 max-w-xl text-base leading-relaxed text-ink-2 md:text-[17px]">{product.description}</p>

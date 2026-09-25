@@ -106,7 +106,7 @@ function CafeSection({ cafe: c, flip }: { cafe: CafeLocation; flip: boolean }) {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-4 md:mt-14 lg:grid-cols-3">
           <Reveal>
             <Hours cafe={c} />
           </Reveal>
@@ -136,7 +136,7 @@ function CafeSection({ cafe: c, flip }: { cafe: CafeLocation; flip: boolean }) {
               <ul className="space-y-3.5">
                 {MENU.map((m) => (
                   <li key={m.name} className="flex items-baseline gap-2">
-                    <span className="font-display text-lg font-semibold whitespace-nowrap">{m.name}</span>
+                    <span className="min-w-0 font-display text-lg leading-snug font-semibold sm:whitespace-nowrap">{m.name}</span>
                     <span className="mb-1 min-w-4 flex-1 border-b border-dotted border-white/25" aria-hidden />
                     <span className="text-right text-sm text-sidebar-muted">{m.note}</span>
                   </li>
