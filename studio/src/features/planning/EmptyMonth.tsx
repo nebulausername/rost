@@ -1,6 +1,6 @@
 import { addDays, endOfMonth, isBefore, isSameMonth, setHours, startOfDay, startOfMonth } from 'date-fns'
 import { CalendarPlus, Sparkles, X } from 'lucide-react'
-import { useMemo, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { Button } from '../../components/ui/primitives'
 import { KEYDATE_KINDS } from '../../lib/constants'
 import { occurrencesBetween } from '../../lib/keydates'
@@ -47,18 +47,12 @@ function Illustration() {
 export function EmptyMonth({ cursor, filtered, onResetFilters, className }: { cursor: Date; filtered?: boolean; onResetFilters?: () => void; className?: string }) {
   const keyDates = useStore((s) => s.keyDates)
   const openPost = useUi((s) => s.openPost)
-  const todayT = startOfDay(new Date()).getTime()
-  const monthT = startOfMonth(cursor).getTime()
-  const month = new Date(monthT)
-  const from = isSameMonth(month, todayT) ? new Date(todayT) : month
-
-  const { inMonth, next } = useMemo(() => {
-    const month = new Date(monthT)
-    const from = isSameMonth(month, todayT) ? new Date(todayT) : month
-    const inMonth = isBefore(endOfMonth(month), from) ? [] : occurrencesBetween(keyDates, from, endOfMonth(month)).filter((o) => o.start >= from || o.end >= from)
-    const next = inMonth[0] ?? occurrencesBetween(keyDates, from, addDays(from, 365)).find((o) => o.start >= from)
-    return { inMonth, next }
-  }, [keyDates, monthT, todayT])
+  // Günstig genug ohne Memo: nur ~20 Anlässe und nur im Leerzustand gerendert
+  const today = startOfDay(new Date())
+  const month = startOfMonth(cursor)
+  const from = isSameMonth(month, today) ? today : month
+  const inMonth = isBefore(endOfMonth(month), from) ? [] : occurrencesBetween(keyDates, from, endOfMonth(month))
+  const next = inMonth[0] ?? occurrencesBetween(keyDates, from, addDays(from, 365)).find((o) => o.start >= from)
 
   const plan = (o: KeyDateOccurrence) => {
     const day = o.start < from ? from : o.start
@@ -111,7 +105,7 @@ export function EmptyMonth({ cursor, filtered, onResetFilters, className }: { cu
                 className="tint rounded-md border border-dashed px-2 py-1 text-[11px] font-semibold transition-transform hover:-translate-y-px"
                 style={{ '--c': KEYDATE_KINDS[o.keyDate.kind].color, borderColor: 'color-mix(in oklab, var(--c) 45%, transparent)' } as CSSProperties}
               >
-                {o.keyDate.title} · {formatDe(o.start, 'd. MMM')}
+                {o.keyDate.title} · {o.start < from ? `bis ${formatDe(o.end, 'd. MMM')}` : formatDe(o.start, 'd. MMM')}
               </button>
             </li>
           ))}

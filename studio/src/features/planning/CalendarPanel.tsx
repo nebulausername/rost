@@ -7,7 +7,6 @@ import {
   isSameMonth,
   isToday,
   isWeekend,
-  parseISO,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -26,11 +25,13 @@ export function MiniMonth({
   range,
   postsByDay,
   onPick,
+  highlight = true,
 }: {
   cursor: Date
   range: { start: Date; end: Date }
   postsByDay: Map<string, Post[]>
   onPick: (d: Date) => void
+  highlight?: boolean
 }) {
   const [month, setMonth] = useState(() => startOfMonth(cursor))
   const [synced, setSynced] = useState(cursor)
@@ -69,7 +70,7 @@ export function MiniMonth({
         {days.map((d) => {
           const n = postsByDay.get(dayKey(d))?.length ?? 0
           const t = d.getTime()
-          const inRange = t >= rs && t <= re
+          const inRange = highlight && t >= rs && t <= re
           const outside = !isSameMonth(d, month)
           const today = isToday(d)
           return (
@@ -103,12 +104,11 @@ export function MiniMonth({
 }
 
 function Bar({ value, max, color, target }: { value: number; max: number; color: string; target?: number }) {
+  const pct = (v: number) => (max ? Math.min(100, (v / max) * 100) : 0)
   return (
-    <div className="relative h-1.5 flex-1 overflow-visible rounded-full bg-surface-2">
-      <div className="h-full rounded-full" style={{ width: `${max ? Math.min(100, (value / max) * 100) : 0}%`, background: color }} />
-      {target != null ? (
-        <span className="absolute -top-0.5 h-2.5 w-0.5 rounded-full bg-ink-3" style={{ left: `calc(${Math.min(100, target)}% - 1px)` }} title={`Soll ${Math.round(target)} %`} />
-      ) : null}
+    <div className="relative h-1.5 w-16 shrink-0 rounded-full bg-surface-2">
+      <div className="h-full rounded-full" style={{ width: `${pct(value)}%`, background: color }} />
+      {target != null ? <span className="absolute -top-[3px] h-3 w-0.5 rounded-full bg-ink-2" style={{ left: `calc(${pct(target)}% - 1px)` }} aria-hidden /> : null}
     </div>
   )
 }
@@ -142,6 +142,8 @@ export function RangeOverview({
     return { platforms, pillars, gaps, open, ready, live }
   }, [posts, days, postsByDay])
   const maxP = Math.max(1, ...stats.platforms.map((p) => p.n))
+  // Säulen-Skala: größter Ist- oder Soll-Anteil = volle Breite, damit kleine Anteile lesbar bleiben
+  const shareMax = Math.max(...PILLARS.map((p) => p.share), ...stats.pillars.map((p) => (posts.length ? (p.n / posts.length) * 100 : 0)))
   const [showAllGaps, setShowAllGaps] = useState(false)
   const gaps = showAllGaps ? stats.gaps : stats.gaps.slice(0, 5)
 
@@ -179,7 +181,7 @@ export function RangeOverview({
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-md tint" style={{ '--c': p.color } as CSSProperties}>
                   <PlatformIcon platform={p.id} className="size-3" />
                 </span>
-                <span className="w-[72px] shrink-0 truncate">{p.label.replace(' Unternehmensprofil', '').replace(' Shorts', '')}</span>
+                <span className="min-w-0 flex-1 truncate">{p.label.replace(' Unternehmensprofil', '').replace(' Shorts', '')}</span>
                 <Bar value={p.n} max={maxP} color={p.color} />
                 <span className="w-5 text-right font-semibold text-ink tabular">{p.n}</span>
               </li>
@@ -192,7 +194,10 @@ export function RangeOverview({
 
       <section className="space-y-2 border-t border-line px-4 pt-3.5 pb-3" aria-label="Posts pro Content-Säule">
         <h3 className="flex items-center justify-between text-[10px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
-          Säulen <span className="font-medium tracking-normal normal-case">Ist · Soll ▏</span>
+          Säulen
+          <span className="flex items-center gap-1 font-medium tracking-normal normal-case">
+            Ist <span className="inline-block h-1.5 w-3 rounded-full bg-ink-3" /> · Soll <span className="inline-block h-3 w-0.5 rounded-full bg-ink-2" />
+          </span>
         </h3>
         <ul className="space-y-1.5">
           {stats.pillars.map((p) => {
@@ -200,8 +205,8 @@ export function RangeOverview({
             return (
               <li key={p.id} className="flex items-center gap-2 text-xs text-ink-2" title={`${p.label}: ${p.n} Posts (${Math.round(share)} %), Soll ${p.share} %`}>
                 <span className="size-2 shrink-0 rounded-full" style={{ background: p.color }} />
-                <span className="w-[84px] shrink-0 truncate">{p.label}</span>
-                <Bar value={share} max={100} color={p.color} target={p.share} />
+                <span className="min-w-0 flex-1 truncate">{p.label}</span>
+                <Bar value={share} max={shareMax} color={p.color} target={p.share} />
                 <span className="w-5 text-right font-semibold text-ink tabular">{p.n}</span>
               </li>
             )
@@ -245,5 +250,3 @@ export function RangeOverview({
     </Card>
   )
 }
-
-export const toDay = (iso: string) => dayKey(parseISO(iso))

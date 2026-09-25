@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../../lib/utils'
+import { useLatest } from './utils'
 
 export type Anchor = HTMLElement | { x: number; y: number }
 export type Placement = 'bottom-start' | 'bottom-end' | 'right-start' | 'top-start'
@@ -16,7 +17,7 @@ function anchorRect(a: Anchor): DOMRect {
 }
 
 /** Position im Viewport berechnen: bevorzugte Seite, sonst gespiegelt, immer eingeklemmt */
-export function place(a: DOMRect, w: number, h: number, placement: Placement, gap = 6) {
+function place(a: DOMRect, w: number, h: number, placement: Placement, gap = 6) {
   const vw = window.innerWidth
   const vh = window.innerHeight
   let left: number
@@ -67,8 +68,7 @@ export function Floating({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
-  const closeRef = useRef(onClose)
-  closeRef.current = onClose
+  const closeRef = useLatest(onClose)
 
   const update = useCallback(() => {
     const el = ref.current
@@ -78,7 +78,7 @@ export function Floating({
       return
     }
     setPos(place(anchorRect(anchor), el.offsetWidth, el.offsetHeight, placement))
-  }, [anchor, placement])
+  }, [anchor, placement, closeRef])
 
   useLayoutEffect(() => {
     update()
@@ -123,7 +123,7 @@ export function Floating({
       document.removeEventListener('pointerdown', onDown, true)
       window.removeEventListener('keydown', onKey, true)
     }
-  }, [anchor, interactive])
+  }, [anchor, interactive, closeRef])
 
   // Fokus zurück an den Auslöser
   useEffect(() => {
@@ -145,41 +145,14 @@ export function Floating({
       aria-label={label}
       data-planning-floating={interactive ? '' : undefined}
       className={cn(
-        'fixed z-[55] animate-pop-in rounded-xl border border-line bg-surface shadow-float',
+        'fixed z-[59] animate-pop-in rounded-xl border border-line bg-surface shadow-float',
         !interactive && 'pointer-events-none',
         className,
       )}
-      style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, visibility: pos ? 'visible' : 'hidden', ...style }}
+      style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, opacity: pos ? undefined : 0, ...style }}
     >
       {children}
     </div>,
     document.body,
   )
-}
-
-/** Pfeiltasten-Navigation für role="menuitem" innerhalb eines Containers */
-export function menuKeyNav(e: React.KeyboardEvent<HTMLElement>, onBack?: () => void) {
-  const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled]),[role="menuitemradio"]:not([disabled])'))
-  const i = items.indexOf(document.activeElement as HTMLElement)
-  const go = (n: number) => {
-    e.preventDefault()
-    items[(n + items.length) % items.length]?.focus()
-  }
-  if (e.key === 'ArrowDown') go(i + 1)
-  else if (e.key === 'ArrowUp') go(i < 0 ? items.length - 1 : i - 1)
-  else if (e.key === 'Home') go(0)
-  else if (e.key === 'End') go(items.length - 1)
-  else if (e.key === 'ArrowRight' && document.activeElement?.getAttribute('aria-haspopup')) {
-    e.preventDefault()
-    ;(document.activeElement as HTMLElement).click()
-  } else if ((e.key === 'ArrowLeft' || e.key === 'Backspace') && onBack && !(e.target as HTMLElement).closest('input')) {
-    e.preventDefault()
-    onBack()
-  } else if (e.key === 'Tab') {
-    // Menü ist eine Einheit – Tab schließt nicht, sondern bleibt drin
-    const focusables = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input, select'))
-    const j = focusables.indexOf(document.activeElement as HTMLElement)
-    e.preventDefault()
-    focusables[(j + (e.shiftKey ? -1 : 1) + focusables.length) % focusables.length]?.focus()
-  }
 }

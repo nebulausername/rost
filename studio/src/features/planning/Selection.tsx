@@ -1,56 +1,16 @@
 import { Keyboard, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Kbd } from '../../components/ui/primitives'
 import { cn } from '../../lib/utils'
 import { Floating } from './Floating'
 import { shortcutsBlocked } from './utils'
 
-/** Mehrfachauswahl (Shift/⌘/Strg-Klick oder X) – Esc hebt sie auf */
-export function useSelection(validIds: Set<string>) {
-  const [raw, setRaw] = useState<Set<string>>(() => new Set())
-  // Gelöschte oder weggefilterte Posts fallen automatisch aus der Auswahl
-  const selected = useMemo(() => {
-    let changed = false
-    const next = new Set<string>()
-    for (const id of raw) {
-      if (validIds.has(id)) next.add(id)
-      else changed = true
-    }
-    return changed ? next : raw
-  }, [raw, validIds])
-
-  const toggle = useCallback((id: string) => {
-    setRaw((s) => {
-      const next = new Set(s)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
-  const clear = useCallback(() => setRaw(new Set()), [])
-
-  const has = selected.size > 0
-  useEffect(() => {
-    if (!has) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || shortcutsBlocked(e)) return
-      clear()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [has, clear])
-
-  return { selected, toggle, clear, ids: useMemo(() => Array.from(selected), [selected]) }
-}
-
-export const isMultiClick = (e: React.MouseEvent) => e.shiftKey || e.metaKey || e.ctrlKey
-
 /** Schwebende Aktionsleiste unten mittig */
 export function SelectionBar({ count, onClear, children }: { count: number; onClear: () => void; children: ReactNode }) {
   if (!count) return null
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[58] flex justify-center px-3 sm:bottom-6">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-[57] flex justify-center px-3 lg:bottom-6">
       <div
         role="toolbar"
         aria-label={`${count} Posts ausgewählt`}
@@ -72,9 +32,6 @@ export function SelectionBar({ count, onClear, children }: { count: number; onCl
 export function BarDivider() {
   return <span className="mx-0.5 hidden h-5 w-px bg-line sm:block" aria-hidden />
 }
-
-export const barSelect =
-  'h-8 appearance-none rounded-lg border border-line bg-surface-2/60 px-2.5 text-xs font-medium text-ink outline-none hover:border-line-strong focus-visible:border-accent'
 
 /** „?“-Knopf mit Kürzel-Übersicht; „?“ auf der Tastatur öffnet sie ebenfalls */
 export function ShortcutHelp({ items, className }: { items: { keys: string[]; label: string }[]; className?: string }) {

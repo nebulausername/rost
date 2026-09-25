@@ -7,7 +7,8 @@ import { useUi } from '../../lib/store'
 import type { Post } from '../../lib/types'
 import { cn } from '../../lib/utils'
 import { duplicate, removePosts, reschedule, setStatus } from './actions'
-import { Floating, menuKeyNav, type Anchor } from './Floating'
+import { Floating, type Anchor } from './Floating'
+import { menuKeyNav } from './utils'
 
 type View = 'main' | 'move' | 'status'
 
@@ -106,7 +107,7 @@ export function PostMenu({
   }
 
   return (
-    <Floating anchor={anchor} onClose={onClose} role="menu" label={`Aktionen für ${post.title}`} returnFocus={returnFocus} className="w-60 p-1.5">
+    <Floating anchor={anchor} onClose={onClose} role="menu" label={`Aktionen für ${post.title}`} returnFocus={returnFocus} className="w-64 p-1.5">
       <div ref={ref} onKeyDown={(e) => menuKeyNav(e, view !== 'main' ? () => setView('main') : undefined)}>
         {view === 'main' ? (
           <>
@@ -156,7 +157,7 @@ export function PostMenu({
             }}
           >
             <SubHeader onBack={() => setView('main')}>Verschieben nach …</SubHeader>
-            <div className="grid grid-cols-[1fr_88px] gap-1.5 px-1 pt-1">
+            <div className="grid grid-cols-[1fr_104px] gap-1.5 px-1 pt-1">
               <label className="sr-only" htmlFor={`mv-d-${post.id}`}>
                 Datum
               </label>

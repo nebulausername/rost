@@ -241,6 +241,11 @@
   }
 }
 
+::view-transition-group(*) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 @media print {
   @page {
     size: A4;

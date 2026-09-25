@@ -223,7 +223,8 @@ function useGlobalShortcuts() {
         useUi.getState().setPalette(!useUi.getState().paletteOpen)
         return
       }
-      if (typing || e.metaKey || e.ctrlKey || e.altKey) return
+      // Seiten-Kürzel (z. B. W = Wochenansicht im Kalender) haben Vorrang
+      if (typing || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return
       const s = useUi.getState()
       if (s.postEditor.open || s.campaignEditor.open || s.paletteOpen || document.querySelector('[role="dialog"]')) return
       const key = e.key.toLowerCase()

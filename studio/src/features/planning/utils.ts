@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { flushSync } from 'react-dom'
 
 /** Ansichts-Vorlieben im Browser merken (fehlertolerant – privater Modus, gesperrter Speicher …) */
@@ -19,6 +19,15 @@ export function useLocalState<T>(key: string, initial: T) {
     }
   }, [key, value])
   return [value, setValue] as const
+}
+
+/** Immer der aktuelle Wert – für Event-Handler, ohne sie neu zu erzeugen */
+export function useLatest<T>(value: T) {
+  const ref = useRef(value)
+  useLayoutEffect(() => {
+    ref.current = value
+  })
+  return ref
 }
 
 export function useMediaQuery(query: string) {
@@ -81,11 +90,41 @@ export function withViewTransition(ids: string[], update: () => void, after?: ()
   }
 }
 
-/** Nach einem Re-Render den Fokus auf eine (neu gerenderte) Karte zurücksetzen */
+/** Nach einem Re-Render den Fokus auf eine (neu gerenderte) Karte zurücksetzen – sofort, sonst im nächsten Frame */
 export function focusPost(id: string) {
-  requestAnimationFrame(() => {
+  const go = () => {
     const el = document.querySelector<HTMLElement>(`[data-focus-id="${CSS.escape(id)}"]`)
-    el?.focus({ preventScroll: false })
-    el?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  })
+    if (!el) return false
+    if (document.activeElement !== el) el.focus({ preventScroll: true })
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    return true
+  }
+  if (!go()) requestAnimationFrame(go)
+}
+
+/** Pfeiltasten-Navigation für role="menuitem" innerhalb eines Containers */
+export function menuKeyNav(e: ReactKeyboardEvent<HTMLElement>, onBack?: () => void) {
+  const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled]),[role="menuitemradio"]:not([disabled])'))
+  const i = items.indexOf(document.activeElement as HTMLElement)
+  const go = (n: number) => {
+    e.preventDefault()
+    items[(n + items.length) % items.length]?.focus()
+  }
+  if (e.key === 'ArrowDown') go(i + 1)
+  else if (e.key === 'ArrowUp') go(i < 0 ? items.length - 1 : i - 1)
+  else if (e.key === 'Home') go(0)
+  else if (e.key === 'End') go(items.length - 1)
+  else if (e.key === 'ArrowRight' && document.activeElement?.getAttribute('aria-haspopup')) {
+    e.preventDefault()
+    ;(document.activeElement as HTMLElement).click()
+  } else if ((e.key === 'ArrowLeft' || e.key === 'Backspace') && onBack && !(e.target as HTMLElement).closest('input')) {
+    e.preventDefault()
+    onBack()
+  } else if (e.key === 'Tab') {
+    // Menü ist eine Einheit – Tab schließt nicht, sondern bleibt drin
+    const focusables = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input, select'))
+    const j = focusables.indexOf(document.activeElement as HTMLElement)
+    e.preventDefault()
+    focusables[(j + (e.shiftKey ? -1 : 1) + focusables.length) % focusables.length]?.focus()
+  }
 }

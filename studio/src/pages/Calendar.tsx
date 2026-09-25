@@ -58,9 +58,11 @@ import { MiniMonth, RangeOverview } from '../features/planning/CalendarPanel'
 import { EmptyMonth } from '../features/planning/EmptyMonth'
 import { Floating, type Anchor } from '../features/planning/Floating'
 import { PostMenu } from '../features/planning/PostMenu'
-import { PreviewProvider, usePreview } from '../features/planning/Preview'
-import { BarDivider, isMultiClick, SelectionBar, ShortcutHelp, useSelection } from '../features/planning/Selection'
-import { focusPost, shortcutsBlocked, useLocalState, useMediaQuery, withViewTransition } from '../features/planning/utils'
+import { PreviewProvider } from '../features/planning/Preview'
+import { usePreview } from '../features/planning/previewContext'
+import { BarDivider, SelectionBar, ShortcutHelp } from '../features/planning/Selection'
+import { affectedIds, isMultiClick, useSelection } from '../features/planning/useSelection'
+import { focusPost, shortcutsBlocked, useLatest, useLocalState, useMediaQuery, withViewTransition } from '../features/planning/utils'
 
 type View = 'month' | 'week' | 'list'
 type ColorBy = Settings['calendarColorBy']
@@ -118,6 +120,8 @@ interface ChipApi {
 }
 
 const ChipCtx = createContext<ChipApi | null>(null)
+/** Wo die Karte gegriffen wurde – damit die Drop-Vorschau die Oberkante der Karte zeigt, nicht den Mauszeiger */
+const grab = { y: 0 }
 const HINT_ID = 'cal-chip-hint'
 
 function useChip(post: Post) {
@@ -136,6 +140,7 @@ function useChip(post: Post) {
     onDragStart: (e: DragEvent<HTMLElement>) => {
       e.dataTransfer.setData('text/post-id', post.id)
       e.dataTransfer.effectAllowed = 'move'
+      grab.y = Math.max(0, Math.min(HOUR_PX / 2, e.clientY - e.currentTarget.getBoundingClientRect().top))
       preview?.hide()
       api.onDragStart(post.id)
     },
@@ -340,15 +345,9 @@ export function CalendarPage() {
     return () => window.removeEventListener('keydown', onKey, true)
   }, [step])
 
-  const rangeRef = useRef(range)
-  rangeRef.current = range
-  const selRef = useRef(sel)
-  selRef.current = sel
-
-  const idsFor = useCallback((id: string) => {
-    const s = selRef.current
-    return s.selected.has(id) && s.selected.size > 1 ? s.ids : [id]
-  }, [])
+  const rangeRef = useLatest(range)
+  const selRef = useLatest(sel)
+  const idsFor = useCallback((id: string) => affectedIds(selRef.current, id), [selRef])
 
   const chipApi = useMemo<ChipApi>(
     () => ({
@@ -366,20 +365,23 @@ export function CalendarPage() {
         const dir = key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1
         const delta = horizontal ? { days: dir } : effectiveView === 'month' ? { days: dir * 7 } : { hours: dir }
         const ids = idsFor(post.id)
-        const target = addMinutes(addDays(parseISO(post.scheduledAt), delta.days ?? 0), (delta.hours ?? 0) * 60)
-        const r = rangeRef.current
-        const outside = target < r.start || target >= addDays(r.end, 1)
         withViewTransition(
           ids,
           () => {
             shiftPosts(ids, delta, { coalesce: true })
-            if (outside) setCursor(target)
+            // Ansicht folgt dem Post, wenn er aus dem sichtbaren Zeitraum wandert (frische Daten, auch bei Tastenwiederholung)
+            const fresh = useStore.getState().posts.find((p) => p.id === post.id)
+            const r = rangeRef.current
+            if (fresh) {
+              const t = parseISO(fresh.scheduledAt)
+              if (t < r.start || t > r.end) setCursor(t)
+            }
           },
           () => focusPost(post.id),
         )
       },
     }),
-    [colorBy, effectiveView, sel.selected, sel.toggle, openPost, idsFor],
+    [colorBy, effectiveView, sel.selected, sel.toggle, openPost, idsFor, rangeRef],
   )
 
   const onDropAt = (e: DragEvent, target: Date, keepTime: boolean) => {
@@ -400,7 +402,9 @@ export function CalendarPage() {
   }
 
   const title =
-    effectiveView === 'week' ? `KW ${format(range.start, 'I')} · ${formatDe(range.start, 'd. MMM')} – ${formatDe(range.end, 'd. MMM yyyy')}` : formatDe(cursor, 'MMMM yyyy')
+    effectiveView === 'week'
+      ? `KW ${format(range.start, 'I')} · ${isSameMonth(range.start, range.end) ? `${format(range.start, 'd.')}–${formatDe(range.end, 'd. MMM')}` : `${formatDe(range.start, 'd. MMM')} – ${formatDe(range.end, 'd. MMM')}`}`
+      : formatDe(cursor, 'MMMM yyyy')
 
   const activeFilters = platformFilter.length + (pillarFilter ? 1 : 0) + (statusFilter ? 1 : 0)
   const counts = STATUSES.map((s) => ({ ...s, n: inRange.filter((p) => p.status === s.id).length })).filter((s) => s.n > 0)
@@ -478,7 +482,7 @@ export function CalendarPage() {
                     <Button variant={activeFilters ? 'dark' : 'secondary'} size="sm" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen}>
                       <Filter className="size-3.5" /> Filter{activeFilters ? ` (${activeFilters})` : ''}
                     </Button>
-                    <ShortcutHelp items={SHORTCUTS} />
+                    <ShortcutHelp items={SHORTCUTS} className="hidden md:flex" />
                     {isXl && !panelOpen ? (
                       <Button variant="secondary" size="icon-sm" className="size-8" onClick={() => setPanelOpen(true)} aria-label="Überblick einblenden" title="Überblick einblenden">
                         <PanelRightOpen className="size-4" />
@@ -556,11 +560,12 @@ export function CalendarPage() {
             </div>
 
             {showPanel ? (
-              <aside className="sticky top-20 hidden space-y-4 xl:block" aria-label="Kalender-Überblick">
+              <aside className="hidden space-y-4 xl:block" aria-label="Kalender-Überblick">
                 <MiniMonth
                   cursor={cursor}
                   range={effectiveView === 'week' ? range : { start: startOfMonth(cursor), end: startOfDay(endOfMonth(cursor)) }}
                   postsByDay={byDay}
+                  highlight={effectiveView === 'week'}
                   onPick={(d) => setCursor(d)}
                 />
                 <RangeOverview
@@ -599,7 +604,7 @@ export function CalendarPage() {
             onToggleSelect={() => sel.toggle(menu.post.id)}
             onMoved={(target) => {
               const r = rangeRef.current
-              if (target < r.start || target >= addDays(r.end, 1)) setCursor(target)
+              if (target < r.start || target > r.end) setCursor(target)
               focusPost(menu.post.id)
             }}
           />
@@ -774,19 +779,24 @@ function ListRow({ post }: { post: Post }) {
       <button
         {...props}
         className={cn(
-          'flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-2.5 pr-10 text-left transition-colors select-none hover:border-line-strong hover:bg-surface-2/50',
+          'flex w-full items-center gap-3 rounded-xl border border-line bg-surface p-2.5 pr-11 text-left transition-colors select-none hover:border-line-strong hover:bg-surface-2/50',
           selected && 'border-accent bg-accent-soft/40 ring-1 ring-accent',
         )}
       >
-        <span className="w-11 shrink-0 text-xs font-semibold text-ink-2 tabular">{time}</span>
+        <span className="w-10 shrink-0 text-xs font-semibold text-ink-2 tabular">{time}</span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-ink">{post.title}</span>
+          <span className="line-clamp-2 text-sm leading-snug font-medium text-ink sm:line-clamp-1">{post.title}</span>
           <span className="mt-1 flex flex-wrap items-center gap-1.5">
             <StatusBadge status={post.status} />
             <PillarBadge pillar={post.pillar} className="hidden sm:inline-flex" />
+            <span className="sm:hidden">
+              <PlatformStack platforms={post.platforms} size={16} />
+            </span>
           </span>
         </span>
-        <PlatformStack platforms={post.platforms} />
+        <span className="hidden sm:inline-flex">
+          <PlatformStack platforms={post.platforms} />
+        </span>
       </button>
       {menuButton('top-1/2 right-2 size-7 -translate-y-1/2 opacity-100 text-ink-3 shadow-none ring-0 bg-transparent hover:bg-surface-2')}
     </div>
@@ -833,10 +843,10 @@ function MonthGrid({
   const [over, setOver] = useState<string | null>(null)
   const todayStart = startOfDay(new Date())
   return (
-    <div role="grid" aria-label={`Monatsansicht ${formatDe(cursor, 'MMMM yyyy')}`}>
-      <div className="grid grid-cols-7 border-b border-line bg-surface-2/40" role="row">
+    <div role="group" aria-label={`Monatsansicht ${formatDe(cursor, 'MMMM yyyy')}`}>
+      <div className="grid grid-cols-7 border-b border-line bg-surface-2/40" aria-hidden>
         {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((d) => (
-          <div key={d} role="columnheader" className="px-2 py-2 text-[11px] font-semibold tracking-wide text-ink-3 uppercase">
+          <div key={d} className="px-2 py-2 text-[11px] font-semibold tracking-wide text-ink-3 uppercase">
             {d}
           </div>
         ))}
@@ -856,8 +866,12 @@ function MonthGrid({
           return (
             <div
               key={key}
-              role="gridcell"
+              role="group"
               aria-label={`${formatDe(day, 'EEEE, d. MMMM')}${dayPosts.length ? `, ${dayPosts.length} Posts` : ''}`}
+              onDragEnter={(e) => {
+                e.preventDefault()
+                setOver(key)
+              }}
               onDragOver={(e) => {
                 e.preventDefault()
                 e.dataTransfer.dropEffect = 'move'
@@ -907,6 +921,7 @@ function MonthGrid({
                   <button
                     type="button"
                     aria-haspopup="dialog"
+                    aria-label={`${hidden} weitere Posts am ${formatDe(day, 'd. MMMM')} anzeigen`}
                     onClick={(e) => onMore(day, e.currentTarget)}
                     onDoubleClick={(e) => e.stopPropagation()}
                     className="w-full rounded px-1.5 py-0.5 text-left text-[11px] font-semibold text-ink-3 hover:bg-surface-3 hover:text-ink"
@@ -983,7 +998,7 @@ function DayPopover({
 
 function snapMinutes(e: DragEvent<HTMLElement>) {
   const rect = e.currentTarget.getBoundingClientRect()
-  const y = e.clientY - rect.top
+  const y = e.clientY - rect.top - grab.y
   const m = Math.round(((y / HOUR_PX) * 60) / SNAP) * SNAP
   return Math.max(0, Math.min(24 * 60 - SNAP, m))
 }

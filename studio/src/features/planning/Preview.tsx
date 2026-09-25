@@ -1,21 +1,13 @@
 import { parseISO } from 'date-fns'
 import { ListChecks } from 'lucide-react'
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { MediaThumb, PillarBadge, PlatformStack, StatusBadge } from '../../components/domain'
 import { FORMATS } from '../../lib/constants'
 import { useStore } from '../../lib/store'
 import { cn, formatDe } from '../../lib/utils'
 import { Floating } from './Floating'
-
-type Bind = {
-  onPointerEnter: (e: React.PointerEvent<HTMLElement>) => void
-  onPointerLeave: () => void
-  onFocus: (e: React.FocusEvent<HTMLElement>) => void
-  onBlur: () => void
-  onPointerDown: () => void
-}
-
-const Ctx = createContext<{ bind: (id: string) => Bind; hide: () => void } | null>(null)
+import { useLatest } from './utils'
+import { PreviewCtx as Ctx, type PreviewBind as Bind } from './previewContext'
 
 const DELAY = 350
 
@@ -27,8 +19,7 @@ export function PreviewProvider({ children, disabled }: { children: ReactNode; d
   const [state, setState] = useState<{ id: string; el: HTMLElement } | null>(null)
   const timer = useRef<number | undefined>(undefined)
   const suppressed = useRef(false)
-  const disabledRef = useRef(disabled)
-  disabledRef.current = disabled
+  const disabledRef = useLatest(disabled)
 
   const hide = useCallback(() => {
     window.clearTimeout(timer.current)
@@ -41,7 +32,7 @@ export function PreviewProvider({ children, disabled }: { children: ReactNode; d
     timer.current = window.setTimeout(() => {
       if (!suppressed.current && el.isConnected) setState({ id, el })
     }, DELAY)
-  }, [])
+  }, [disabledRef])
 
   useEffect(() => {
     // Während eines Drags keine Vorschau; Esc blendet sie aus
@@ -93,10 +84,6 @@ export function PreviewProvider({ children, disabled }: { children: ReactNode; d
       {state && !disabled ? <PreviewCard id={state.id} anchor={state.el} /> : null}
     </Ctx.Provider>
   )
-}
-
-export function usePreview() {
-  return useContext(Ctx)
 }
 
 function PreviewCard({ id, anchor }: { id: string; anchor: HTMLElement }) {
